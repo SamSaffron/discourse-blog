@@ -38,17 +38,36 @@ module ::DiscourseBlog
     end
 
     def create
-      review, token = Review.issue!(topic: @topic, user: current_user, label: params[:label].to_s)
-      render json: {
-               review: entry(review),
-               url: "#{Configuration.origin}/review?#{{ review_token: token }.to_query}",
-             },
-             status: :created
+      review = Review.issue!(topic: @topic, user: current_user, label: params[:label].to_s)
+      render json: { review: entry(review) }, status: :created
     end
 
     def destroy
       Review.where(topic_id: @topic.id).find(params[:id]).revoke!(current_user)
       head :no_content
+    end
+
+    def topic_feedback
+      records =
+        ReviewFeedback
+          .joins(:review)
+          .where(discourse_blog_reviews: { topic_id: @topic.id })
+          .includes(:review)
+          .order(id: :desc)
+          .offset(page * 30)
+          .limit(31)
+          .to_a
+      render json: {
+               feedback:
+                 records
+                   .first(30)
+                   .map do |record|
+                     record.as_json(only: %i[id name email message created_at]).merge(
+                       review: record.review.as_json(only: %i[id label post_version revoked_at]),
+                     )
+                   end,
+               more: records.length > 30,
+             }
     end
 
     def feedback
@@ -77,6 +96,7 @@ module ::DiscourseBlog
     def entry(review, active: review.accessible?)
       review.as_json(only: %i[id label title post_version created_at expires_at revoked_at]).merge(
         active: active,
+        url: (review.url if active),
       )
     end
   end

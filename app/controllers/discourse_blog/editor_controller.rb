@@ -69,8 +69,30 @@ module ::DiscourseBlog
     end
 
     def publish
-      @publication.publish!(current_user, revision_id: params.require(:revision_id).to_i)
+      # Without a revision, publishers release their current draft in one step.
+      revision_id = params[:revision_id].presence&.to_i
+      @publication.publish!(current_user, revision_id: revision_id)
       render json: entry(@topic.reload, @publication)
+    end
+
+    def changes
+      source = @publication.editorial_topic
+      live = @publication.published_revision
+      raise Discourse::NotFound unless live && source&.first_post
+
+      title_diff =
+        if source.title != live.title
+          DiscourseDiff.new(
+            "<div>#{CGI.escapeHTML(live.title.to_s)}</div>",
+            "<div>#{CGI.escapeHTML(source.title)}</div>",
+          ).inline_html
+        end
+      render json: {
+               title_diff_html: title_diff,
+               diff_html: DiscourseDiff.new(live.cooked.to_s, source.first_post.cooked).inline_html,
+             }
+    rescue ONPDiff::DiffLimitExceeded
+      render json: { title_diff_html: nil, diff_html: nil, diff_error: true }
     end
 
     def prepare
@@ -148,46 +170,7 @@ module ::DiscourseBlog
 
     def entry(topic, publication, live: nil)
       publication ||= Publication.new(topic: topic, path: "/#{topic.slug.presence || topic.id}")
-      source = publication.editorial_topic
-      metadata = publication.editorial_metadata
-      {
-        id: topic.id,
-        title: source&.title || topic.title,
-        public_title: publication.published_revision&.title,
-        public_excerpt: publication.published_revision&.data&.[]("excerpt"),
-        public_path: publication.published_revision&.data&.[]("path"),
-        draft_correction: publication.draft_correction?,
-        topic_url: source&.url || topic.url,
-        source_topic_id: source&.id,
-        source_url: source&.url,
-        discussion_url: publication.discussion_topic&.url,
-        preview_url: publication.preview_url,
-        url: publication.url,
-        path: metadata["path"],
-        excerpt: metadata["excerpt"],
-        featured: metadata["featured"],
-        published_at: metadata["published_at"],
-        published: publication.published?,
-        published_revision_id: publication.published_revision_id,
-        live: live.nil? ? publication.publicly_visible? : live,
-        draft: !publication.published? && source.present?,
-        replies: [publication.discussion_topic&.posts_count.to_i - 1, 0].max,
-        can_publish: Configuration.publisher?(current_user),
-        submitted_revision: revision_entry(publication.submitted_revision, publication),
-        approved_revision: revision_entry(publication.approved_revision, publication),
-        scheduled_revision_id: publication.scheduled_revision_id,
-        scheduled_at: publication.scheduled_at,
-        schedule_error: publication.schedule_error,
-      }
-    end
-
-    def revision_entry(revision, publication)
-      return nil unless revision
-      {
-        id: revision.id,
-        title: revision.title,
-        preview_url: "#{publication.preview_url}?revision_id=#{revision.id}",
-      }
+      PublicationEntry.new(publication, user: current_user, topic: topic, live: live).to_h
     end
   end
 end

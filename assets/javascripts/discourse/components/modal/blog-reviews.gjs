@@ -20,14 +20,12 @@ export default class BlogReviews extends Component {
   @tracked busy = false;
   @tracked reviews = [];
   @tracked more = false;
-  @tracked createdUrl;
   @tracked selectedReview;
   @tracked feedback = [];
   @tracked feedbackMore = false;
 
   #page = 0;
   #feedbackPage = 0;
-  #createdId;
 
   constructor() {
     super(...arguments);
@@ -38,29 +36,22 @@ export default class BlogReviews extends Component {
     return `/blog/publications/${this.args.model.topicId}/reviews`;
   }
 
-  get linkData() {
-    return { url: this.createdUrl };
-  }
-
   formatDate(value) {
     return value ? new Date(value).toLocaleString() : "";
   }
 
   @action
   async create(data) {
-    const result = await this.#request(".json", { type: "POST", data });
-    if (result) {
-      this.createdUrl = result.url;
-      this.#createdId = result.review.id;
+    if (await this.#request(".json", { type: "POST", data })) {
       this.#page = 0;
       await this.#load();
     }
   }
 
   @action
-  async copy() {
+  async copy(review) {
     try {
-      await clipboardCopy(this.createdUrl);
+      await clipboardCopy(review.url);
       this.toasts.success({
         data: { message: i18n("discourse_blog.review.copied") },
       });
@@ -78,9 +69,6 @@ export default class BlogReviews extends Component {
           type: "DELETE",
         });
         if (result !== false) {
-          if (this.#createdId === review.id) {
-            this.createdUrl = null;
-          }
           this.#page = 0;
           await this.#load();
         }
@@ -181,26 +169,12 @@ export default class BlogReviews extends Component {
               /></form.Actions>
           </Form>
         {{/if}}
-        {{#if this.createdUrl}}
-          <p>{{i18n "discourse_blog.review.copy_notice"}}</p>
-          <Form @data={{this.linkData}} as |form|>
-            <form.Field
-              @format="full"
-              @name="url"
-              @title={{i18n "discourse_blog.review.link"}}
-              @type="input"
-              as |field|
-            ><field.Control readonly /></form.Field>
-          </Form>
-          <DButton @action={{this.copy}} @label="discourse_blog.review.copy" />
-          <a
-            class="blog-reviews__open"
-            href={{this.createdUrl}}
-            target="_blank"
-            rel="noopener noreferrer"
-          >{{i18n "discourse_blog.review.open"}}</a>
-        {{/if}}
         <h3>{{i18n "discourse_blog.review.links"}}</h3>
+        {{#if this.reviews}}
+          <p class="blog-reviews__notice">{{i18n
+              "discourse_blog.review.copy_notice"
+            }}</p>
+        {{/if}}
         {{#each this.reviews key="id" as |review|}}
           <section class="blog-reviews__entry" data-review-id={{review.id}}>
             <strong>{{review.label}}</strong>
@@ -216,7 +190,31 @@ export default class BlogReviews extends Component {
               {{#if review.active}}{{i18n
                   "discourse_blog.review.active"
                 }}{{else}}{{i18n "discourse_blog.review.inactive"}}{{/if}}</p>
+            {{#if review.url}}
+              <div class="blog-reviews__link">
+                <input
+                  class="blog-reviews__link-url"
+                  aria-label={{i18n "discourse_blog.review.link"}}
+                  readonly
+                  value={{review.url}}
+                />
+                <DButton
+                  class="blog-reviews__copy"
+                  @action={{fn this.copy review}}
+                  @disabled={{this.busy}}
+                  @icon="copy"
+                  @label="discourse_blog.review.copy"
+                />
+                <a
+                  class="blog-reviews__open"
+                  href={{review.url}}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >{{i18n "discourse_blog.review.open"}}</a>
+              </div>
+            {{/if}}
             <DButton
+              class="blog-reviews__feedback-toggle"
               @action={{fn this.viewFeedback review}}
               @disabled={{this.busy}}
               @translatedLabel={{i18n
@@ -224,11 +222,14 @@ export default class BlogReviews extends Component {
                 count=review.feedback_count
               }}
             />
-            {{#unless review.revoked_at}}<DButton
+            {{#unless review.revoked_at}}
+              <DButton
+                class="blog-reviews__revoke"
                 @action={{fn this.revoke review}}
                 @disabled={{this.busy}}
                 @label="discourse_blog.review.revoke"
-              />{{/unless}}
+              />
+            {{/unless}}
           </section>
         {{else}}<p>{{i18n "discourse_blog.review.no_links"}}</p>{{/each}}
         {{#if this.more}}<DButton

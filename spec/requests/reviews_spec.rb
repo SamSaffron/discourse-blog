@@ -24,11 +24,11 @@ RSpec.describe "External draft review", type: :request do
            label: "Editorial round",
          }
     expect(response.status).to eq(201)
-    body = response.parsed_body
-    [body["review"], Rack::Utils.parse_query(URI(body["url"]).query)["review_token"]]
+    review = response.parsed_body["review"]
+    [review, Rack::Utils.parse_query(URI(review["url"]).query)["review_token"]]
   end
 
-  it "requires an authorized editor and stores only the bearer token digest" do
+  it "requires an authorized editor and keeps issued links readable by editors" do
     post "/blog/publications/#{topic.id}/reviews.json"
     expect(response.status).to eq(403)
     sign_in(user)
@@ -36,9 +36,16 @@ RSpec.describe "External draft review", type: :request do
     expect(response.status).to eq(403)
     review, token = issue_review
     stored = DiscourseBlog::Review.find(review["id"])
-    expect(stored.token_digest).to eq(Digest::SHA256.hexdigest(token))
-    expect(stored.attributes.values).not_to include(token)
+    expect(stored.token).to eq(token)
     expect(stored.expires_at).to be_within(2.seconds).of(7.days.from_now)
+
+    # The link stays retrievable, so a lost link does not force a new one.
+    get "https://test.localhost/blog/publications/#{topic.id}/reviews.json"
+    expect(response.parsed_body["reviews"].first["url"]).to eq(review["url"])
+    sign_in(user)
+    get "https://test.localhost/blog/publications/#{topic.id}/reviews.json"
+    expect(response.status).to eq(403)
+    get "https://test.localhost/session/#{admin.encoded_username}/become"
     expect(topic.reload.category_id).to eq(drafts.id)
     expect(DiscourseBlog::Publication.where(topic: topic, published: true)).not_to exist
     expect(UserHistory.where(custom_type: "blog_review_create", acting_user_id: admin.id)).to exist

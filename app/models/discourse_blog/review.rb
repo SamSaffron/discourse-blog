@@ -3,13 +3,17 @@
 module ::DiscourseBlog
   class Review < ActiveRecord::Base
     self.table_name = "discourse_blog_reviews"
+    # TODO(03-2027): Remove once the post-deploy column drop has been promoted.
+    self.ignored_columns += %i[token_digest]
+    TOKEN_FORMAT = /\A[A-Za-z0-9_-]{43}\z/
 
     belongs_to :topic
     belongs_to :creator, class_name: "User"
     has_many :feedback, class_name: "DiscourseBlog::ReviewFeedback", dependent: :delete_all
 
     validates :label, length: { maximum: 100 }
-    validates :title, :cooked, :token_digest, :post_version, :expires_at, presence: true
+    validates :title, :cooked, :post_version, :expires_at, presence: true
+    validates :token, format: { with: TOKEN_FORMAT }
     scope :unexpired, -> { where(revoked_at: nil).where("expires_at > ?", Time.current) }
 
     def self.issue!(topic:, user:, label: "")
@@ -23,7 +27,6 @@ module ::DiscourseBlog
         post = topic.first_post
         post.with_lock do
           raise Discourse::InvalidAccess unless eligible_topic?(topic)
-          token = SecureRandom.urlsafe_base64(32)
           review =
             create!(
               topic: topic,
@@ -32,7 +35,7 @@ module ::DiscourseBlog
               title: topic.title,
               cooked: snapshot_html(post),
               post_version: post.version,
-              token_digest: Digest::SHA256.hexdigest(token),
+              token: SecureRandom.urlsafe_base64(32),
               expires_at: 7.days.from_now,
             )
           StaffActionLogger.new(user).log_custom(
@@ -40,16 +43,21 @@ module ::DiscourseBlog
             topic_id: topic.id,
             review_id: review.id,
           )
-          [review, token]
+          review
         end
       end
     end
 
     def self.find_by_token!(token)
-      raise Discourse::NotFound unless token.is_a?(String) && token.match?(/\A[A-Za-z0-9_-]{43}\z/)
-      review = unexpired.find_by(token_digest: Digest::SHA256.hexdigest(token))
+      raise Discourse::NotFound unless token.is_a?(String) && token.match?(TOKEN_FORMAT)
+      review = unexpired.find_by(token: token)
       raise Discourse::NotFound unless review&.accessible?
       review
+    end
+
+    # The link only reaches editors, who can already read the draft and issue more links.
+    def url
+      "#{Configuration.origin}/review?#{{ review_token: token }.to_query}"
     end
 
     def self.eligible_topic?(topic)
@@ -128,7 +136,7 @@ end
 #  post_version :integer          not null
 #  revoked_at   :datetime
 #  title        :string           not null
-#  token_digest :string(64)       not null
+#  token        :string(64)
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
 #  creator_id   :bigint           not null
@@ -136,6 +144,6 @@ end
 #
 # Indexes
 #
-#  index_discourse_blog_reviews_on_token_digest             (token_digest) UNIQUE
+#  index_discourse_blog_reviews_on_token                    (token) UNIQUE
 #  index_discourse_blog_reviews_on_topic_id_and_created_at  (topic_id,created_at)
 #

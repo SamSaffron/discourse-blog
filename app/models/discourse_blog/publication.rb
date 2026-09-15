@@ -76,18 +76,32 @@ module ::DiscourseBlog
     end
 
     def draft_correction?
+      pending_changes.any?
+    end
+
+    # Names of the article pieces that differ between the working copy and the live revision.
+    def pending_changes
       source = editorial_topic
-      return false unless published_revision && source&.first_post
-      return true if submitted_revision_id && submitted_revision_id != published_revision_id
+      return [] unless published_revision && source&.first_post
 
       metadata = editorial_metadata
-      source.title != published_revision.title || source.first_post.raw != published_revision.raw ||
-        metadata.slice("path", "excerpt", "featured") !=
-          published_revision.data.slice("path", "excerpt", "featured") ||
-        (
-          metadata["published_at"].present? &&
-            Time.zone.parse(metadata["published_at"]).to_i != published_at&.to_i
-        )
+      live = published_revision.data
+      changes = {
+        "title" => source.title != published_revision.title,
+        "body" => source.first_post.raw != published_revision.raw,
+        "path" => metadata["path"] != live["path"],
+        "excerpt" => metadata["excerpt"] != live["excerpt"],
+        "featured" => metadata["featured"] != live["featured"],
+        "published_at" => draft_date_changed?(metadata["published_at"]),
+        "revision" => submitted_revision_differs?,
+      }
+      changes.select { |_, changed| changed }.keys
+    end
+
+    def edits_since_publish
+      source = editorial_topic
+      return 0 unless last_published_at && source&.first_post
+      PostRevision.where(post: source.first_post).where("created_at > ?", last_published_at).count
     end
 
     def article
@@ -324,6 +338,24 @@ module ::DiscourseBlog
     end
 
     private
+
+    def draft_date_changed?(value)
+      return false if value.blank?
+      parsed =
+        begin
+          Time.zone.parse(value.to_s)
+        rescue ArgumentError
+          nil
+        end
+      parsed.present? && parsed.to_i != published_at&.to_i
+    end
+
+    # A re-submission of an unchanged draft is not a pending change.
+    def submitted_revision_differs?
+      return false if submitted_revision_id.blank? || submitted_revision_id == published_revision_id
+      compared = %w[title raw path excerpt featured]
+      submitted_revision.data.slice(*compared) != published_revision.data.slice(*compared)
+    end
 
     def initialize_topics
       if topic.category_id == SiteSetting.discourse_blog_drafts_category.to_i

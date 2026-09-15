@@ -75,6 +75,11 @@ en:
         identity_tab: Identity
         identity_description: The name, introduction, and About content shared by all blog themes.
         themes_index_description: Choose a theme to edit. Draft changes stay private until you activate them.
+        thumbnail:
+          journal: The journal
+          headline: Stay curious.
+          excerpt: Notes on making things, staying curious, and finding meaning in the everyday.
+          palette: Theme palette
         back_to_themes: Back to themes
         editor_description: Edit this theme, save a draft, then preview or activate it.
         preview_short: Preview draft
@@ -112,27 +117,94 @@ en:
         delete_confirm: "Delete %{name} and its saved draft? This cannot be undone."
   js:
     discourse_blog:
-      editorial:
-        published_success: "Published — revision %{id} is live on the blog."
-        view_post: View blog post
-        view_live: View currently published article ↗
-        publish_correction: Publish correction now
-        release: Publication
-        notice: Draft topics and editorial replies stay private. Only an approved article revision is copied to the public discussion. Saving a draft never changes the live article.
-        edit_draft: Edit privately
-        prepare: Create private working copy
-        submit: Save and submit revision
-        submitted: "Submitted revision %{id}"
-        preview_revision: Preview submitted revision
-        approve: Approve submitted revision
-        approved: "Approved revision %{id}. Later draft edits are not included."
-        publish: Publish now
-        publish_confirm: "Publish approved revision %{id}? Only this frozen article is released. The editorial topic and its replies remain private; newer draft edits are not included."
-        schedule: Schedule approved revision
-        schedule_label: Or schedule for later
-        schedule_hint: Uses your local timezone. Choose a time at least one minute ahead.
-        scheduled: "Revision %{id} is scheduled for %{date}."
-        cancel_schedule: Cancel scheduled publication
+      panel:
+        aria_label: Blog publication
+        badge:
+          draft: Draft
+          live: Live
+          changes_pending: Changes pending
+          scheduled: Scheduled
+          unpublished: Unpublished
+        headline:
+          draft: Not on the blog yet
+          live: Live on the blog
+          changes_pending: Live article is out of date
+          scheduled: "Publishes %{date}"
+          unpublished: Removed from the blog
+        will_publish_to: "Will publish to %{url}"
+        saved: "Saved %{age}"
+        published_as: "Published %{date} as revision %{id}"
+        view_live: View live ↗
+        edits_since:
+          one: "%{count} edit since"
+          other: "%{count} edits since"
+        scheduled_revision: "Revision %{id}, approved by %{user}"
+        scheduled_notice: Edits you make now are not included unless you reschedule
+        last_published: "Last published %{date}"
+        unpublished_notice: The public discussion stays open
+        preview: Preview
+        preview_revision: "Preview revision %{id}"
+        share_for_review: Share for review
+        publish: Publish
+        publish_correction: Publish correction
+        publish_now: Publish now
+        publish_now_hint: Copies the article to the blog immediately
+        publish_correction_hint: Replaces the live article immediately
+        more_options: More publishing options
+        options: Options
+        schedule: Schedule…
+        schedule_hint: Pick a date and time
+        schedule_title: Schedule publication
+        schedule_notice: Schedules the article as it is now. Later edits are not included unless you reschedule.
+        schedule_time: Publish at
+        schedule_time_hint: Uses your local timezone. Choose a time at least one minute ahead.
+        schedule_submit: Schedule
+        submit: Submit for approval
+        submit_hint: Ask another publisher to sign off first
+        submitted: "Revision %{id} submitted, awaiting approval"
+        approve_and_publish: "Approve and publish revision %{id}"
+        unpublish_hint: Remove from the blog; the discussion stays public
+        cancel_schedule: Cancel schedule
+        published: "Published — revision %{id} is live on the blog."
+        publish_confirm: "Publish “%{title}” to the blog now? Only the article is copied; this topic and its replies stay private."
+        publish_correction_confirm: "Replace the live article with the current draft? The article keeps its URL and public discussion."
+        changes_title: What changes on the blog
+        changed: "Changed: %{fields}"
+        change:
+          title: title
+          body: body
+          path: path
+          excerpt: excerpt
+          featured: featured flag
+          published_at: publication date
+          revision: submitted revision
+        show_diff: Show diff
+        hide_diff: Hide diff
+        diff_error: The change is too large to show as a diff. Use Preview instead.
+        settings: Article settings
+        settings_hint: Path, excerpt, date, featured
+        feedback:
+          count:
+            zero: No private feedback yet
+            one: "%{count} private feedback"
+            other: "%{count} private feedback"
+          active_links:
+            zero: no active review links
+            one: "%{count} active review link"
+            other: "%{count} active review links"
+          show: Read feedback
+          hide: Hide feedback
+          manage_links: Review links
+        discussion:
+          live: Live on the blog
+          not_live: Not on the blog
+          intro: "This is the public discussion for %{article}."
+          intro_not_live: This topic is not on the blog.
+          working_copy: "Edits go through the %{link}."
+          working_copy_pending: "Edits go through the %{link}, which has unpublished changes."
+          working_copy_link: private working copy
+          no_working_copy: Edit privately to prepare changes in a private working copy without touching this topic.
+          edit_privately: Edit privately
       review:
         anonymous: Anonymous reviewer
         page_title: Draft review
@@ -142,7 +214,7 @@ en:
         sharing_notice: "Create a frozen copy of the saved article for seven days. Anyone with the link can read it and send private feedback, without an account. Later edits are not included. Existing upload URLs are not protected: do not use this for confidential attachments."
         label: Reviewer or review-round label
         create: Create seven-day review link
-        copy_notice: Copy this link now. It will not be shown again after closing this dialog. You can revoke it below.
+        copy_notice: Anyone with this link can read the article revision it was created from. Revoke it to stop it working.
         link: Review link
         copy: Copy link
         copied: Review link copied
@@ -191,14 +263,14 @@ en:
       visit_blog: Visit blog
       refresh: Refresh articles
       drafts_hint:
-        Published titles open the live blog article. Use Edit privately to work on a draft or correction. Editorial working copies remain private after publication; public discussions stay in the Blog category.
+        Published titles open the live blog article. Open a draft to publish, schedule, or correct it from its topic. Editorial working copies remain private after publication; public discussions stay in the Blog category.
       private_draft: Draft
       draft_correction: Draft correction
       edit_privately: Edit privately
+      open_draft: Open draft
       public_discussion: Public discussion
       not_published: Not on the blog
       preview: Preview
-      manage: Blog publication
       load_more: Load more
       unpublish_confirm:
         Remove this article from the blog? The topic and its replies
@@ -218,6 +290,5 @@ en:
         choose a date in the past. Dates use UTC.
       featured: Feature on the homepage
       save: Save settings
-      publish: Publish approved revision
       unpublish: Unpublish
       appearance_link: Appearance

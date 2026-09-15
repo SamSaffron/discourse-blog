@@ -6,6 +6,7 @@ import { service } from "@ember/service";
 import AdminConfigAreaCard from "discourse/admin/components/admin-config-area-card";
 import ThemeCardPreview from "discourse/components/theme-card-preview";
 import DMenu from "discourse/float-kit/components/d-menu";
+import { or } from "discourse/truth-helpers";
 import DButton from "discourse/ui-kit/d-button";
 import DDropdownMenu from "discourse/ui-kit/d-dropdown-menu";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
@@ -42,11 +43,14 @@ export default class BlogThemeCard extends Component {
   }
 
   <template>
-    <AdminConfigAreaCard class="theme-card" data-theme-id={{@theme.id}}>
+    <AdminConfigAreaCard
+      class="theme-card blog-theme-card"
+      data-theme-id={{@theme.id}}
+    >
       <:content>
         <ThemeCardPreview @theme={{@theme}}>
           <:placeholder>
-            <BlogThemeThumbnail @theme={{@theme}} @label={{@theme.name}} />
+            <BlogThemeThumbnail @theme={{@theme}} />
           </:placeholder>
 
           <:title>
@@ -59,10 +63,7 @@ export default class BlogThemeCard extends Component {
                 "discourse_blog.admin.revision"
               }}
               {{@theme.revision}}</p>
-          </:title>
-
-          <:footer>
-            <div class="theme-card__footer">
+            {{#if (or this.isActive @theme.locally_modified)}}
               <div class="theme-card__badges">
                 {{#if this.isActive}}
                   <span class="theme-card__badge">{{dIcon "circle-check"}}
@@ -73,7 +74,11 @@ export default class BlogThemeCard extends Component {
                     {{i18n "discourse_blog.admin.local_edits_badge"}}</span>
                 {{/if}}
               </div>
+            {{/if}}
+          </:title>
 
+          <:footer>
+            <div class="theme-card__footer">
               <div class="theme-card__controls">
                 <DButton
                   class="btn-default theme-card__button edit"

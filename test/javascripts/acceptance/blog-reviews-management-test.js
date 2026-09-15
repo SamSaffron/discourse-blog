@@ -1,8 +1,12 @@
 import { click, visit } from "@ember/test-helpers";
 import { test } from "qunit";
+import { cloneJSON } from "discourse/lib/object";
+import topicFixtures from "discourse/tests/fixtures/topic";
 import pretender, { response } from "discourse/tests/helpers/create-pretender";
 import formKit from "discourse/tests/helpers/form-kit-helper";
 import { acceptance } from "discourse/tests/helpers/qunit-helpers";
+
+const TOPIC_URL = "/t/internationalization-localization/280";
 
 acceptance("Blog review management", function (needs) {
   needs.user({ admin: true });
@@ -12,32 +16,34 @@ acceptance("Blog review management", function (needs) {
   needs.hooks.beforeEach(() => {
     reviews = [];
     const draft = {
-      id: 40,
-      source_topic_id: 40,
-      source_url: "/t/private-article/40",
+      id: 280,
+      role: "draft",
+      status: "draft",
+      source_topic_id: 280,
+      source_url: TOPIC_URL,
       title: "Private article",
       draft: true,
       published: false,
       live: false,
+      can_publish: true,
+      changes: [],
       path: "/private-article",
+      url: "https://blog.example.com/private-article",
       excerpt: "",
       featured: false,
     };
-    pretender.get("/blog/editor.json", () =>
-      response({
-        topics: [draft],
-        more: false,
-        blog_url: "https://blog.example.com",
-      })
-    );
-    pretender.get("/blog/publications/40.json", () => response(draft));
-    pretender.get("/blog/publications/40/reviews.json", () =>
+    pretender.get("/t/280.json", () => {
+      const topic = cloneJSON(topicFixtures["/t/280/1.json"]);
+      topic.blog_publication = draft;
+      return response(topic);
+    });
+    pretender.get("/blog/publications/280/reviews.json", () =>
       response({ reviews, more: false })
     );
   });
 
   test("creates, reads private feedback, and revokes a review link separately from publication", async function (assert) {
-    pretender.post("/blog/publications/40/reviews.json", (request) => {
+    pretender.post("/blog/publications/280/reviews.json", (request) => {
       assert.strictEqual(
         new URLSearchParams(request.requestBody).get("label"),
         "Editorial round",
@@ -49,14 +55,12 @@ acceptance("Blog review management", function (needs) {
         post_version: 1,
         active: true,
         feedback_count: 1,
+        url: "https://blog.example.com/review?review_token=secret",
       };
       reviews = [review];
-      return response({
-        review,
-        url: "https://blog.example.com/review?review_token=secret",
-      });
+      return response({ review });
     });
-    pretender.get("/blog/publications/40/reviews/1/feedback.json", () =>
+    pretender.get("/blog/publications/280/reviews/1/feedback.json", () =>
       response({
         feedback: [
           {
@@ -70,16 +74,20 @@ acceptance("Blog review management", function (needs) {
         more: false,
       })
     );
-    pretender.delete("/blog/publications/40/reviews/1.json", () => {
+    pretender.delete("/blog/publications/280/reviews/1.json", () => {
       reviews = [
-        { ...reviews[0], active: false, revoked_at: "2030-01-01T00:00:00Z" },
+        {
+          ...reviews[0],
+          active: false,
+          url: null,
+          revoked_at: "2030-01-01T00:00:00Z",
+        },
       ];
       assert.step("revoked");
       return response(204);
     });
-    await visit("/blog/editor");
-    await click('[data-topic-id="40"] button');
-    await click(".blog-publication__reviews");
+    await visit(TOPIC_URL);
+    await click(".blog-publication-panel__reviews");
     assert
       .dom(".blog-reviews")
       .includesText(
@@ -91,13 +99,15 @@ acceptance("Blog review management", function (needs) {
       .fillIn("Editorial round");
     await formKit(".blog-reviews__create").submit();
     assert
-      .dom(".blog-reviews__open")
-      .hasAttribute(
-        "href",
+      .dom(".blog-reviews__link-url")
+      .hasValue(
         "https://blog.example.com/review?review_token=secret",
-        "the one-time link is shown"
+        "an issued link stays readable instead of being shown once"
       );
-    await click('[data-review-id="1"] button:first-of-type');
+    assert
+      .dom(".blog-reviews__open")
+      .hasAttribute("href", "https://blog.example.com/review?review_token=secret");
+    await click(".blog-reviews__feedback-toggle");
     assert
       .dom(".blog-reviews__feedback p")
       .hasText(
@@ -107,12 +117,12 @@ acceptance("Blog review management", function (needs) {
     assert
       .dom(".blog-reviews__feedback script")
       .doesNotExist("feedback never becomes executable HTML");
-    await click('[data-review-id="1"] button:last-of-type');
+    await click(".blog-reviews__revoke");
     assert.verifySteps([], "revocation requires confirmation");
     await click(".dialog-footer .btn-primary");
     assert.verifySteps(["revoked"], "the selected grant is revoked");
     assert
-      .dom(".blog-reviews__open")
+      .dom(".blog-reviews__link")
       .doesNotExist("a revoked link is no longer offered for sharing");
     assert
       .dom('[data-review-id="1"]')
@@ -121,13 +131,14 @@ acceptance("Blog review management", function (needs) {
         "the old review remains available for private feedback"
       );
   });
+
   test("asks before discarding unsaved publication settings", async function (assert) {
-    await visit("/blog/editor");
-    await click('[data-topic-id="40"] button');
-    await formKit(".blog-publication form")
+    await visit(TOPIC_URL);
+    await click(".blog-publication-panel__settings-toggle");
+    await formKit(".blog-publication-panel__form")
       .field("excerpt")
       .fillIn("Unsaved publication excerpt");
-    await click(".blog-publication__reviews");
+    await click(".blog-publication-panel__reviews");
     assert
       .dom(".dialog-body")
       .includesText(

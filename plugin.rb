@@ -8,6 +8,7 @@
 
 enabled_site_setting :discourse_blog_enabled
 register_asset "stylesheets/blog-editor.scss"
+register_asset "stylesheets/blog-publication-panel.scss"
 register_asset "stylesheets/blog-review.scss"
 register_asset "stylesheets/blog-post-summary.scss"
 register_asset "stylesheets/blog-discussion.scss"
@@ -78,6 +79,18 @@ after_initialize do
         blog_name: SiteSetting.discourse_blog_title,
       }
     end
+  end
+
+  add_to_serializer(
+    :topic_view,
+    :blog_publication,
+    include_condition: -> { !blog_publication.nil? },
+  ) do
+    unless instance_variable_defined?(:@discourse_blog_publication)
+      @discourse_blog_publication =
+        DiscourseBlog::PublicationEntry.for_viewer(object.topic, scope.user)
+    end
+    @discourse_blog_publication
   end
 
   Discourse::Application.routes.prepend do

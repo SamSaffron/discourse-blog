@@ -1,11 +1,12 @@
 import Component from "@glimmer/component";
 import { cached, tracked } from "@glimmer/tracking";
-import { fn } from "@ember/helper";
+import { array, fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { trackedObject } from "@ember/reactive/collections";
 import { schedule } from "@ember/runloop";
 import { service } from "@ember/service";
+import AceEditor from "discourse/components/ace-editor";
 import BackButton from "discourse/components/back-button";
 import Form from "discourse/components/form";
 import { ajax } from "discourse/lib/ajax";
@@ -514,14 +515,32 @@ export default class BlogThemeEditor extends Component {
             </div>
 
             {{#if this.currentTemplate.overridden}}
-              <form.Field
-                @format="full"
-                @name={{this.currentTemplate.name}}
-                @showTitle={{false}}
-                @title={{this.currentTemplate.label}}
-                @type="code"
-                as |field|
-              ><field.Control @height={{520}} @lang="html" /></form.Field>
+              {{! Keep the field name stable during teardown when switching tabs. }}
+              {{#each (array this.currentTemplate) as |template|}}
+                <form.Field
+                  @format="full"
+                  @name={{template.name}}
+                  @showTitle={{false}}
+                  @title={{template.label}}
+                  @type="custom"
+                  as |field|
+                >
+                  <field.Control>
+                    <AceEditor
+                      class="blog-theme-editor__template-control"
+                      id={{field.id}}
+                      name={{field.name}}
+                      aria-invalid={{if field.error "true"}}
+                      aria-describedby={{field.describedBy}}
+                      @content={{field.value}}
+                      @disabled={{field.disabled}}
+                      @mode="html"
+                      @onChange={{field.set}}
+                      @resizable={{true}}
+                    />
+                  </field.Control>
+                </form.Field>
+              {{/each}}
             {{else}}
               <div class="blog-theme-editor__builtin">
                 <DHighlightedCode

@@ -14,6 +14,10 @@
 }
 
 .blog-themes {
+  .themes-cards-container {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 23rem), 1fr));
+  }
+
   &__active {
     margin-inline-start: 0.5em;
     color: var(--success);
@@ -21,7 +25,117 @@
   }
 }
 
+.blog-theme-card {
+  .admin-config-area-card__content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto 1fr;
+  }
+
+  .theme-card-preview__image-wrapper {
+    grid-column: 1 / -1;
+    height: auto;
+    min-height: 14rem;
+  }
+
+  .theme-card-preview__content {
+    padding-block: 1rem;
+    justify-content: center;
+  }
+
+  .theme-card__footer {
+    align-self: center;
+    padding: 1rem;
+    padding-inline-start: 0;
+  }
+
+  .theme-card__controls {
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .theme-card__description {
+    margin: 0;
+    font-size: var(--font-down-1);
+    color: var(--primary-high);
+  }
+
+  .theme-card__badges {
+    min-height: 0;
+    margin-top: 0.5rem;
+  }
+}
+
+.blog-theme-thumbnail {
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+  padding: 1.5rem 1.75rem;
+  background: var(--blog-theme-paper);
+  color: var(--blog-theme-ink);
+
+  &__eyebrow {
+    font-size: var(--font-down-2);
+    letter-spacing: 0.12em;
+    color: var(--blog-theme-accent);
+  }
+
+  &__headline {
+    margin-block: 1rem 0.5rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.75rem;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    overflow-wrap: anywhere;
+  }
+
+  &__excerpt {
+    max-width: 34ch;
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: var(--font-down-1);
+    line-height: 1.5;
+  }
+
+  &__palette {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+  }
+
+  &__swatch {
+    width: 0.85rem;
+    height: 0.85rem;
+    border-radius: 50%;
+
+    &.--ink {
+      background: var(--blog-theme-ink);
+    }
+
+    &.--accent {
+      background: var(--blog-theme-accent);
+    }
+
+    &.--paper {
+      background: var(--blog-theme-paper);
+      border: 1px solid var(--blog-theme-ink);
+    }
+  }
+
+  &__caption {
+    margin-inline-start: 0.25rem;
+    font-size: var(--font-down-2);
+  }
+}
+
 .blog-theme-editor {
+  &__template-control {
+    height: 520px;
+  }
+
   &__tabs {
     margin-bottom: var(--space-4);
   }

@@ -193,7 +193,10 @@ acceptance("Blog themes and identity", function (needs) {
       .doesNotHaveAttribute("aria-current");
     await click(".blog-theme-editor__customize");
     const form = formKit(".blog-theme-editor__form");
-    await form.field("template_index").fillIn("<h1>{{ site.title }}</h1>");
+    await fillControl(
+      '[data-name="template_index"] textarea',
+      "<h1>{{ site.title }}</h1>"
+    );
     assert
       .dom(".blog-theme-editor__activate")
       .isDisabled("unsaved template edits cannot be activated");
@@ -223,6 +226,12 @@ acceptance("Blog themes and identity", function (needs) {
       .dom('[data-name="template_index"]')
       .doesNotExist("other templates are not stacked below it");
 
+    await fillControl(
+      '[data-name="template_layout"] textarea',
+      "<main>Unsaved author edits</main>"
+    );
+    const editor = find(".blog-theme-editor__template-control");
+
     await click(".blog-theme-editor__variables");
     assert
       .dom(".blog-theme-variables")
@@ -246,6 +255,26 @@ acceptance("Blog themes and identity", function (needs) {
       .includesText(
         "article.body_html",
         "the inserted snippet is visible in the editor"
+      );
+    assert
+      .dom('[data-name="template_layout"] .ace_content')
+      .includesText(
+        "Unsaved author edits",
+        "inserting preserves the author's changes"
+      );
+    assert.strictEqual(
+      find(".blog-theme-editor__template-control"),
+      editor,
+      "programmatic changes update the existing editor without remounting"
+    );
+
+    await click('[data-authoring-tab="design"]');
+    await click('[data-authoring-tab="template_layout"]');
+    assert
+      .dom('[data-name="template_layout"] .ace_content')
+      .includesText(
+        "article.body_html",
+        "FormKit retains the snippet across tab changes"
       );
 
     await click(".blog-theme-editor__restore-default");
@@ -288,9 +317,10 @@ acceptance("Blog themes and identity", function (needs) {
       .fillIn(".blog { color: blue; }");
     await click('[data-authoring-tab="template_index"]');
     await click(".blog-theme-editor__customize");
-    await formKit(".blog-theme-editor__form")
-      .field("template_index")
-      .fillIn("<h1>Unsaved preview</h1>");
+    await fillControl(
+      '[data-name="template_index"] textarea',
+      "<h1>Unsaved preview</h1>"
+    );
     await click(".blog-theme-editor__preview-draft");
     assert
       .dom(".blog-theme-preview__frame")
@@ -515,6 +545,68 @@ acceptance("Blog themes and identity", function (needs) {
       currentURL(),
       "/admin/plugins/discourse-blog/themes",
       "confirmation returns to the list"
+    );
+  });
+
+  test("theme covers show a shared specimen and the saved palette", async function (assert) {
+    await visit("/admin/plugins/discourse-blog/themes");
+
+    assert
+      .dom(".blog-theme-thumbnail__headline")
+      .hasText("Stay curious.", "the cover shows readable sample typography");
+    assert
+      .dom(".blog-theme-thumbnail__excerpt")
+      .hasText(
+        "Notes on making things, staying curious, and finding meaning in the everyday.",
+        "the cover includes a sample excerpt"
+      );
+    assert
+      .dom(".blog-theme-thumbnail__caption")
+      .hasText("Theme palette", "the cover identifies its palette specimen");
+    const style = find(".blog-theme-thumbnail").style;
+    assert.strictEqual(
+      style.getPropertyValue("--blog-theme-paper").trim(),
+      "#f5f0e6",
+      "the cover uses the saved paper color"
+    );
+    assert.strictEqual(
+      style.getPropertyValue("--blog-theme-ink").trim(),
+      "#19382d",
+      "the cover uses the saved ink color"
+    );
+    assert.strictEqual(
+      style.getPropertyValue("--blog-theme-accent").trim(),
+      "#d64b2a",
+      "the cover uses the saved accent color"
+    );
+    assert
+      .dom(".blog-theme-thumbnail__swatch")
+      .exists({ count: 3 }, "all three palette colors have swatches");
+  });
+
+  test("theme covers fall back safely for missing or invalid colors", async function (assert) {
+    draft.paper_color = null;
+    draft.ink_color = "invalid";
+    draft.accent_color = "abcdef; background: url(https://example.com/image)";
+
+    await visit("/admin/plugins/discourse-blog/themes");
+
+    const style = find(".blog-theme-thumbnail").style;
+    for (const [name, fallback] of [
+      ["paper", "secondary"],
+      ["ink", "primary"],
+      ["accent", "tertiary"],
+    ]) {
+      assert.strictEqual(
+        style.getPropertyValue(`--blog-theme-${name}`).trim(),
+        `var(--${fallback})`,
+        `invalid ${name} falls back to the admin palette`
+      );
+    }
+    assert.strictEqual(
+      style.length,
+      3,
+      "invalid colors cannot inject declarations"
     );
   });
 

@@ -27,10 +27,15 @@ repeatable development setup, admin controls, and deployment boundaries.
 - Separate editorial-only drafts category and native Discourse composer autosave.
 - Editorial dashboard with server-side status filtering, title/path search, and
   explicit 30-item Load more pagination.
-- Topic footer publication controls and authenticated blog-layout preview.
+- An editor-only publication panel on the article's own topic: state, one-click
+  publish or correction, an inline summary and diff of pending changes, inline
+  article settings, and scheduling, approval, and withdrawal behind a menu.
+  Public discussion topics show a thin banner pointing at the private working copy.
+- Authenticated blog-layout preview.
 - Explicit revision submission, approval, publication, scheduling, and withdrawal.
 - Revocable seven-day draft review links with frozen article revisions and private,
-  account-free FormKit feedback. Feedback is never published as topic replies.
+  account-free FormKit feedback. Feedback is never published as topic replies; it
+  is counted and readable inline in the working copy's publication panel.
   See [External draft review](docs/external-draft-review.md).
 - Private working topics, frozen approved revisions, and preserved public discussions.
 - Durable paths, including historical date-based paths; automatic 301 aliases when
@@ -115,6 +120,17 @@ currently shown to readers; **Identity** holds the blog name, tagline, and About
 content. A design owns its whole look: palette, CSS, JavaScript, and Liquid
 templates. Design and color changes are blog-only; they do not restyle Discuss.
 
+Theme cards use a shared typographic specimen and the saved draft's paper, ink,
+and accent colors. These covers are palette samples, not screenshots: they do not
+load a draft's CSS, fonts, JavaScript, or templates into the admin page. Use the
+card's **Preview** action to see the complete rendered design.
+
+The template editor uses FormKit's custom-control slot with Ace bound directly to
+`field.value` and `field.set`. Variable insertion changes the field programmatically;
+the stock code control captures only its initial value. Keep this binding local to
+the template editor rather than patching core or remounting Ace after insertion.
+CSS and JavaScript fields use the stock code control.
+
 Reader pages always load one built-in stylesheet, `blog.css`, which is a plain
 reading layout, followed by the active design's CSS. The bundled designs under
 `branding/` (for example `branding/term-llm`) show richer layouts built on that
@@ -190,22 +206,32 @@ normal preview/activation interface; no articles or editorial data need to chang
 
 1. **New draft** opens the native composer in the private drafts category. Saving
    the topic does not publish it. Internal replies stay on this private topic.
-2. For an existing public article, open **Blog publication → Create private
-   working copy**. Then use **Open private editorial topic** to edit in Discourse.
+2. Every draft topic shows an editor-only **publication panel** above the first
+   post. It states whether the article is a draft, live, live with pending
+   changes, scheduled, or unpublished, and offers one primary action.
+3. For an existing public article, the public discussion topic shows a banner
+   with **Edit privately**, which creates a private working copy and links to it.
    The existing public discussion and its replies keep their IDs.
-3. Set the path, excerpt, date, and featured state. **Save settings** stages metadata
-   without changing the live article. **Save and submit revision** freezes the
-   article and these settings for approval.
-4. A publisher previews the submitted revision and explicitly approves it.
-   Publishers may approve their own work; contributors and editors cannot publish.
-5. **Publish now** requires confirmation and copies only that frozen
-   article into a separate public discussion (or updates its existing first post).
-   It never moves an editorial topic or copies its replies.
-6. Alternatively, schedule the approved revision using your local date/time.
-   Later edits or submissions do not change that scheduled release. Cancel or
-   replace the schedule explicitly. The article's optional backdated publication
-   date is separate from its scheduled release time.
-7. **Unpublish** withdraws the blog page and cancels scheduling but leaves the
+4. **Article settings** (path, excerpt, date, featured) are edited inline in the
+   panel. **Save settings** stages metadata without changing the live article.
+5. **Publish** (or **Publish correction** once live) requires confirmation and
+   freezes the current draft and settings as a revision, approves it, and copies
+   only that frozen article into a separate public discussion (or updates its
+   existing first post). It never moves an editorial topic or copies its replies.
+   Contributors and editors see **Submit for approval** instead; a publisher then
+   previews the submitted revision and chooses **Approve and publish**.
+   Publishers may approve their own work.
+6. When a live article's working copy drifts, the panel lists which fields
+   changed and can show an inline diff against the live revision. While the
+   working copy matches the live article there is nothing to publish, so the
+   panel offers only **Options → Unpublish**.
+7. The panel menu holds the rarer paths: **Schedule…** freezes the draft as it is
+   now and releases it at a local date/time; later edits do not change that
+   scheduled release unless it is cancelled and rescheduled. The article's optional
+   backdated publication date is separate from its scheduled release time.
+   **Submit for approval** is also available to publishers who want a second
+   sign-off.
+8. **Unpublish** withdraws the blog page and cancels scheduling but leaves the
    public discussion accessible. The legacy return-to-drafts endpoint now has the
    same withdrawal semantics and prepares a private working copy; it never moves
    an existing public discussion.
@@ -326,7 +352,7 @@ at the first page. Search input is bounded to 100 characters and SQL wildcards a
 escaped. Ordering uses update time and ID, with duplicate rows suppressed when
 appending pages if entries move between requests.
 
-The publication modal, theme editor, identity form, and editor search use FormKit. Article
+The publication panel's settings and schedule forms, theme editor, identity form, and editor search use FormKit. Article
 path and excerpt use `@format="full"`, rather than custom input-width CSS. The
 public archive's lightweight GET search remains semantic server-rendered HTML;
 booting Ember/FormKit there would defeat the no-application-required reader page.

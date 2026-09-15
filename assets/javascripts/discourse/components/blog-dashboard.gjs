@@ -14,12 +14,10 @@ import DEmptyState from "discourse/ui-kit/d-empty-state";
 import DFlashMessage from "discourse/ui-kit/d-flash-message";
 import DPageHeader from "discourse/ui-kit/d-page-header";
 import { i18n } from "discourse-i18n";
-import BlogPublication from "./modal/blog-publication";
 
 export default class BlogDashboard extends Component {
   @service composer;
   @service currentUser;
-  @service modal;
   @service siteSettings;
 
   @tracked filter = "all";
@@ -129,18 +127,6 @@ export default class BlogDashboard extends Component {
         { type: "POST" }
       );
       DiscourseURL.routeTo(publication.source_url);
-    } catch (error) {
-      popupAjaxError(error);
-    }
-  }
-
-  @action
-  async manage(topic) {
-    try {
-      const publication = await ajax(`/blog/publications/${topic.id}.json`);
-      this.modal.show(BlogPublication, {
-        model: { publication, onChanged: this.refresh },
-      });
     } catch (error) {
       popupAjaxError(error);
     }
@@ -294,9 +280,9 @@ export default class BlogDashboard extends Component {
             {{/if}}
             {{#if topic.source_url}}
               <a
-                class="blog-dashboard__edit-private"
+                class="btn btn-default blog-dashboard__edit-private"
                 href={{topic.source_url}}
-              >{{i18n "discourse_blog.edit_privately"}}</a>
+              >{{i18n "discourse_blog.open_draft"}}</a>
             {{else}}
               <DButton
                 class="blog-dashboard__edit-private btn-default"
@@ -304,11 +290,6 @@ export default class BlogDashboard extends Component {
                 @label="discourse_blog.edit_privately"
               />
             {{/if}}
-            <DButton
-              class="btn-default"
-              @action={{fn this.manage topic}}
-              @label="discourse_blog.manage"
-            />
           </div>
         </article>
       {{else}}

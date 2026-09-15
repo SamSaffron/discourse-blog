@@ -188,7 +188,7 @@ namespace :discourse_blog do
 
         Use the edit button to make this your own. The normal Discourse composer provides uploads, Markdown, rich text, revisions, and autosave.
 
-        When you are ready, open **Blog publication** below the topic. Give the article a short excerpt and a permanent path, preview it, then choose **Save and publish**.
+        When you are ready, use the publication panel above this post. Open **Article settings** to give the article a short excerpt and a permanent path, preview it, then choose **Publish**.
 
         Publishing makes the entire topic public, including any editorial replies. Remove private editorial notes before publishing.
       MD
