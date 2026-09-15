@@ -1,0 +1,24 @@
+en:
+  theme_metadata:
+    description: "The term-llm community: terminal-first, browser-ready, and built together."
+    settings:
+      product_url:
+        description: "The term-llm product website."
+      blog_url:
+        description: "The companion blog. Change this when moving beyond the development host."
+      docs_url:
+        description: "Documentation and quickstart URL."
+      source_url:
+        description: "The project's source repository."
+  navigation: "term-llm navigation"
+  product: "term-llm.com"
+  blog: "Blog"
+  docs: "Documentation"
+  source: "GitHub"
+  eyebrow: "Open source. Built together."
+  headline: "Your workflow. Our workshop."
+  description: "A home for people building with term-llm. Ask a question, share an agent workflow, or help make terminal-first AI better for everyone."
+  start: "Start with the docs"
+  stories: "Read the blog"
+  terminal_label: "One command. Your workspace."
+  terminal_note: "Your machine. Your models. Your workflow."

@@ -1,0 +1,151 @@
+@use "lib/viewport";
+
+:root {
+  --font-family:
+    system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", sans-serif;
+  --heading-font-family: var(--font-family);
+  --d-border-radius: 10px;
+  --d-button-border-radius: 8px;
+}
+
+body:not(.embed-mode) {
+  .d-header {
+    box-shadow: none;
+    border-bottom: 1px solid var(--primary-low);
+
+    #site-text-logo {
+      font-family:
+        ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      font-size: 1.5rem;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: normal;
+
+      &::before {
+        content: ">_";
+        font-size: 0.85em;
+        color: var(--tertiary);
+      }
+    }
+  }
+
+  .sidebar-wrapper {
+    background: var(--secondary);
+    border-inline-end: 1px solid var(--primary-low);
+  }
+
+  .topic-list .main-link a.title {
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .topic-list tbody tr {
+    border-color: var(--primary-low);
+  }
+
+  .navigation-container {
+    padding-block: 0.75em;
+  }
+}
+
+.term-community {
+  margin-bottom: 1.5em;
+
+  &__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5em;
+    padding-block: 0.75em 1.25em;
+    font-family:
+      ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85rem;
+
+    a {
+      color: var(--primary-high);
+    }
+  }
+
+  &__hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 2em;
+    padding: clamp(1.5em, 3vw, 3em);
+    border: 1px solid var(--primary-low);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--tertiary) 5%, var(--secondary));
+
+    h1 {
+      max-width: 12ch;
+      font-size: clamp(2rem, 3.5vw, 3.75rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      margin-block: 0.25em 0.4em;
+    }
+
+    @include viewport.until(md) {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25em;
+    }
+  }
+
+  &__eyebrow {
+    color: var(--tertiary);
+    font-family:
+      ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.8rem;
+    margin: 0;
+  }
+
+  &__description {
+    color: var(--primary-high);
+    line-height: 1.65;
+    max-width: 48ch;
+  }
+
+  &__links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25em;
+    margin-top: 1.5em;
+  }
+
+  &__terminal {
+    align-self: center;
+    min-width: 0;
+    padding: 1.5em;
+    border: 1px solid var(--primary-low);
+    border-radius: 12px;
+    background: var(--secondary);
+    box-shadow: 0 12px 32px rgb(var(--primary-rgb), 0.06);
+
+    p {
+      font-size: 0.8rem;
+      color: var(--primary-high);
+    }
+
+    @include viewport.until(sm) {
+      padding: 1em;
+
+      .term-community__terminal-note {
+        display: none;
+      }
+    }
+
+    code {
+      display: block;
+      padding-block: 1em;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      background: transparent;
+      color: var(--tertiary);
+      font-size: clamp(0.9rem, 1.4vw, 1.3rem);
+      font-family:
+        ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    }
+  }
+}

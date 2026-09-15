@@ -1,0 +1,21 @@
+{
+  "name": "term-llm Community",
+  "authors": "term-llm",
+  "about_url": "https://term-llm.com",
+  "theme_version": "1.0.0",
+  "component": false,
+  "color_schemes": {
+    "term-llm Light": {
+      "primary": "222b28", "secondary": "fcfcfa", "tertiary": "16634e",
+      "quaternary": "16634e", "header_background": "fcfcfa", "header_primary": "222b28",
+      "highlight": "e5efe8", "selected": "e5efe8", "hover": "eff3ed",
+      "danger": "b63737", "success": "16634e", "love": "a74161"
+    },
+    "term-llm Dark": {
+      "primary": "e1e8e2", "secondary": "171c1a", "tertiary": "98d5b2",
+      "quaternary": "98d5b2", "header_background": "171c1a", "header_primary": "e1e8e2",
+      "highlight": "283d31", "selected": "283d31", "hover": "232e28",
+      "danger": "f29191", "success": "98d5b2", "love": "eea0b9"
+    }
+  }
+}

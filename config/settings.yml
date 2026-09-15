@@ -1,0 +1,43 @@
+discourse_blog:
+  discourse_blog_enabled:
+    default: false
+    client: true
+  discourse_blog_url:
+    default: ""
+    client: true
+    regex: "^$|^https://[a-z0-9.-]+(:[0-9]+)?$"
+  discourse_blog_category:
+    type: category
+    default: ""
+    client: true
+  discourse_blog_drafts_category:
+    type: category
+    default: ""
+    client: true
+  discourse_blog_title:
+    default: "The blog"
+  discourse_blog_description:
+    default: "Ideas, stories, and conversations."
+    textarea: true
+  discourse_blog_about:
+    default: ""
+    textarea: true
+  discourse_blog_posts_per_page:
+    default: 10
+    min: 1
+    max: 30
+  discourse_blog_contributor_groups:
+    type: group_list
+    default: "3"
+    disallowed_groups: "0"
+    refresh: true
+  discourse_blog_editor_groups:
+    type: group_list
+    default: "3"
+    disallowed_groups: "0"
+    refresh: true
+  discourse_blog_publisher_groups:
+    type: group_list
+    default: "3"
+    disallowed_groups: "0"
+    refresh: true

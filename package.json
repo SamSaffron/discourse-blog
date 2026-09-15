@@ -1,0 +1,10 @@
+{
+  "name": "discourse-blog",
+  "private": true,
+  "devDependencies": {
+    "@discourse/lint-configs": "^3.3.0",
+    "eslint": "10.6.0",
+    "prettier": "3.8.1",
+    "stylelint": "17.5.0"
+  }
+}

@@ -1,0 +1,8 @@
+product_url:
+  default: "https://term-llm.com"
+blog_url:
+  default: "https://blog.dev.home.arpa"
+docs_url:
+  default: "https://term-llm.com/getting-started/quickstart/"
+source_url:
+  default: "https://github.com/SamSaffron/term-llm"
