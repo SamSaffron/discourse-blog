@@ -66,10 +66,12 @@ It is currently tested against the development checkout accompanying this plugin
 1. Install this directory as `plugins/discourse-blog`, run migrations, and restart
    Discourse using your deployment's normal plugin installation process.
 2. Route both HTTPS hostnames to the same Discourse installation/database. Keep
-   Discuss as the primary/canonical Discourse hostname. Register the blog hostname
-   as an alias in the database connection's `host_names` configuration so
-   `Middleware::EnforceHostname` preserves it. DNS/TLS/proxy configuration alone
-   does not configure this alias in production. Do not disable hostname checking
+   Discuss as the primary/canonical Discourse hostname. On multisite deployments,
+   register the blog hostname as an alias in the database connection's `host_names`
+   configuration so the correct database is selected before the plugin runs. The
+   plugin preserves its configured hostname after database selection; single-site
+   deployments do not need a database hostname alias. DNS/TLS/proxy configuration
+   must still preserve the original `Host` header. Do not disable hostname checking
    or forward arbitrary untrusted host headers.
 3. Create one public **Blog** category. Suggested permissions: everyone can **See
    / Reply**, staff can **See / Reply / Create**. In Ruby these are `:create_post`

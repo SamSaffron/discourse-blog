@@ -179,6 +179,45 @@ RSpec.describe "Blog publication", type: :request do
       publication
     end
 
+    it "preserves the configured blog host when it is not a database hostname alias" do
+      RailsMultisite::ConnectionManagement.stubs(:current_db_hostnames).returns(["test.localhost"])
+
+      get "https://blog.example.com#{publication.path}",
+          headers: {
+            "X-Forwarded-Host" => "untrusted.example.com",
+          }
+
+      expect(request.env["HTTP_HOST"]).to eq("blog.example.com")
+      expect(request.env["HTTP_X_FORWARDED_HOST"]).to be_nil
+      expect(response.status).to eq(200)
+      expect(response.body).to include(publication.url)
+    end
+
+    it "supports an explicit default port and rejects other ports" do
+      RailsMultisite::ConnectionManagement.stubs(:current_db_hostnames).returns(["test.localhost"])
+
+      get publication.path, headers: { "Host" => "blog.example.com:443" }
+      expect(request.env["HTTP_HOST"]).to eq("blog.example.com:443")
+      expect(response.body).to include(publication.url)
+
+      get publication.path, headers: { "Host" => "blog.example.com:444" }
+      expect(request.env["HTTP_HOST"]).to eq("test.localhost")
+      expect(response.body).not_to include(publication.url)
+    end
+
+    it "continues rewriting untrusted hosts to the discussion host" do
+      RailsMultisite::ConnectionManagement.stubs(:current_db_hostnames).returns(["test.localhost"])
+
+      get "https://untrusted.example.com#{publication.path}",
+          headers: {
+            "X-Forwarded-Host" => "blog.example.com",
+          }
+
+      expect(request.env["HTTP_HOST"]).to eq("test.localhost")
+      expect(request.env["HTTP_X_FORWARDED_HOST"]).to be_nil
+      expect(response.body).not_to include(publication.url)
+    end
+
     it "exposes only published articles across the homepage, archive, feed and sitemap" do
       unpublished = Fabricate(:topic, category: category)
       %w[/ /archive /feed.xml /sitemap.xml].each do |path|

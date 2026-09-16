@@ -29,6 +29,11 @@ after_initialize do
   end
   reloadable_patch { ::Guardian.prepend(DiscourseBlog::GuardianExtensions) }
   reloadable_patch { ::Topic.prepend(DiscourseBlog::TopicExtensions) }
+  if defined?(::Middleware::EnforceHostname)
+    reloadable_patch do
+      ::Middleware::EnforceHostname.prepend(DiscourseBlog::EnforceHostnameExtension)
+    end
+  end
 
   Rails.application.config.filter_parameters += [:review_token]
 
