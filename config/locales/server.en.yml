@@ -147,7 +147,8 @@ en:
       stale: This theme has changed. Reload it and review the latest draft before continuing.
       active_delete: Activate another theme before deleting this one.
       repository_invalid: Use a public HTTPS Git repository URL without credentials, query parameters, or fragments.
-      manifest_invalid: The repository must contain a valid blog-theme.json manifest (version 1 or 2).
+      archive_invalid: "The ZIP file is invalid, has too many files, or contains oversized theme files."
+      manifest_invalid: The theme must contain a valid blog-theme.json manifest (version 1 or 2).
       file_too_large: "%{file} exceeds the allowed file size."
       preview: "Theme preview: %{name}"
       preview_notice: This preview is visible only through this temporary preview link. The live blog has not changed.

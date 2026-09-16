@@ -356,3 +356,23 @@ The publication panel's settings and schedule forms, theme editor, identity form
 path and excerpt use `@format="full"`, rather than custom input-width CSS. The
 public archive's lightweight GET search remains semantic server-rendered HTML;
 booting Ember/FormKit there would defeat the no-application-required reader page.
+
+### Theme import and export
+
+The Themes page supports importing a public HTTPS Git repository or a blog theme ZIP
+(up to 2 MB and 1,000 archive entries). Both create a new, inactive draft. Export in
+the theme editor downloads the **last saved draft**, not unsaved edits or the active
+snapshot. Save changes before exporting.
+
+Exports use the same version-2 source layout as Git imports:
+
+- `blog-theme.json`: `version`, `name`, `accent_color`, `paper_color`, `ink_color`
+- `blog.css` and `blog.js`
+- `templates/{layout,index,article,about,not_found}.liquid`
+
+Empty template files retain the built-in fallback. Archives may contain these files
+at the root or inside one enclosing directory. Import applies the same per-file size
+and template validation as Git imports; archive contents are never extracted to disk.
+Theme IDs, revisions, Git source metadata, activation state, and site identity settings
+are not exported. An imported ZIP is an independent draft with no Git connection.
+Core Discourse forum theme ZIPs use a different format and cannot be imported here.

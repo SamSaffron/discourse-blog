@@ -97,8 +97,16 @@ en:
         local_edits_badge: Local edits
         new_theme_name: New blog theme
         new_theme: New theme from active design
-        import_git: Import from Git
-        git_description: "Import a public HTTPS repository containing blog-theme.json (name, layout, accent_color, paper_color, ink_color), optional blog.css and blog.js, and, for version 2, optional templates/*.liquid overrides at its root. Files are plain, without a build step. Imports create drafts only."
+        import: Import
+        import_description: "Import a theme from a Git repository or ZIP file. Imports create new drafts without changing the active theme."
+        import_source: Import from
+        import_file: ZIP file
+        theme_file: Theme file
+        import_file_description: "Choose an exported blog theme ZIP (up to 2 MB). Discourse forum theme exports are not supported."
+        export: Export
+        export_description: "Download the last saved version as a ZIP file. Save any changes before exporting."
+        import_git: Git repository
+        git_description: "Import a public HTTPS repository containing blog-theme.json (version, name, accent_color, paper_color, ink_color), optional blog.css and blog.js, and, for version 2, optional templates/*.liquid overrides at its root. Files are plain, without a build step. Imports create drafts only."
         repository: Public Git repository URL
         branch: Branch (leave blank for the default)
         active_theme: "Active design: %{name} · revision %{revision}"

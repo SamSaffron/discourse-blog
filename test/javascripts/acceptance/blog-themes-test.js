@@ -3,9 +3,12 @@ import {
   currentURL,
   fillIn as fillControl,
   find,
+  triggerEvent,
   visit,
 } from "@ember/test-helpers";
 import { test } from "qunit";
+import sinon from "sinon";
+import interceptClick from "discourse/lib/intercept-click";
 import pretender, { response } from "discourse/tests/helpers/create-pretender";
 import formKit from "discourse/tests/helpers/form-kit-helper";
 import { acceptance } from "discourse/tests/helpers/qunit-helpers";
@@ -465,6 +468,70 @@ acceptance("Blog themes and identity", function (needs) {
       currentURL(),
       "/admin/plugins/discourse-blog/themes/candidate/edit",
       "save opens the persisted theme without a dirty-form prompt"
+    );
+  });
+
+  test("offers Import and exports only saved themes", async function (assert) {
+    await visit("/admin/plugins/discourse-blog/themes");
+    assert
+      .dom(".d-page-subheader .btn-default")
+      .hasText("Import", "the list offers a general import action");
+
+    await visit("/admin/plugins/discourse-blog/themes/candidate/edit");
+    assert
+      .dom(".blog-theme-editor__export")
+      .hasAttribute(
+        "href",
+        "/blog/themes/candidate/export",
+        "exports the saved draft"
+      )
+      .hasAttribute("download", "", "downloads rather than navigating");
+
+    const event = {
+      target: find(".blog-theme-editor__export"),
+      preventDefault: sinon.spy(),
+    };
+    interceptClick(event);
+    assert.false(
+      event.preventDefault.called,
+      "the client router leaves the download to the browser"
+    );
+
+    await visit("/admin/plugins/discourse-blog/themes/new");
+    assert
+      .dom(".blog-theme-editor__export")
+      .doesNotExist("a theme must be saved before it can be exported");
+  });
+
+  test("imports a ZIP file and opens the imported draft", async function (assert) {
+    const file = new File(["theme archive"], "theme.zip", {
+      type: "application/zip",
+    });
+    pretender.post("/blog/themes/import.json", (request) => {
+      assert.strictEqual(
+        request.requestBody.get("file"),
+        file,
+        "the archive is sent as multipart form data"
+      );
+      assert.false(
+        request.requestBody.has("repository"),
+        "no Git source is sent"
+      );
+      return response(draft);
+    });
+
+    await visit("/admin/plugins/discourse-blog/themes/import/new");
+    await click('input[type="radio"][value="file"]');
+    assert.dom('[name="repository"]').doesNotExist("Git fields are hidden");
+    await triggerEvent('.blog-theme-import input[type="file"]', "change", {
+      files: [file],
+    });
+    await formKit(".blog-theme-import__form").submit();
+
+    assert.strictEqual(
+      currentURL(),
+      "/admin/plugins/discourse-blog/themes/candidate/edit",
+      "import opens the new draft"
     );
   });
 

@@ -339,6 +339,59 @@ RSpec.describe "Blog themes", type: :request do
     end
   end
 
+  describe "ZIP endpoints" do
+    it "exports the saved draft and imports the download as a new inactive draft" do
+      get "https://test.localhost/session/#{admin.encoded_username}/become"
+      theme = DiscourseBlog::BlogTheme.save(attributes.stringify_keys, user: admin)
+
+      get "https://test.localhost/blog/themes/#{theme["id"]}/export"
+
+      expect(response.status).to eq(200)
+      expect(response.media_type).to eq("application/zip")
+      expect(response.headers["Content-Disposition"]).to include(
+        "attachment",
+        "blog-theme-quiet-draft.zip",
+      )
+      Tempfile.create(%w[blog-theme .zip]) do |file|
+        file.binmode
+        file.write(response.body)
+        file.flush
+        post "https://test.localhost/blog/themes/import.json",
+             params: {
+               file: Rack::Test::UploadedFile.new(file.path, "application/zip"),
+             }
+      end
+
+      expect(response.status).to eq(201)
+      expect(response.parsed_body["name"]).to eq(theme["name"])
+      expect(response.parsed_body["id"]).not_to eq(theme["id"])
+      expect(response.parsed_body["source"]).to be_nil
+      expect(DiscourseBlog::BlogTheme.active["id"]).to be_nil
+    end
+
+    it "restricts imports and exports to admins on the discussion host" do
+      theme = DiscourseBlog::BlogTheme.save(attributes.stringify_keys, user: admin)
+      get "https://test.localhost/blog/themes/#{theme["id"]}/export"
+      expect(response.status).to eq(403)
+      post "https://test.localhost/blog/themes/import.json", params: { file: "theme.zip" }
+      expect(response.status).to eq(403)
+
+      get "https://test.localhost/session/#{moderator.encoded_username}/become"
+      get "https://test.localhost/blog/themes/#{theme["id"]}/export"
+      expect(response.status).to eq(403)
+      post "https://test.localhost/blog/themes/import.json", params: { file: "theme.zip" }
+      expect(response.status).to eq(403)
+
+      get "https://test.localhost/session/#{admin.encoded_username}/become"
+      get "https://blog.example.com/blog/themes/#{theme["id"]}/export"
+      expect(response.status).to eq(404)
+      get "https://test.localhost/blog/themes/missing/export"
+      expect(response.status).to eq(404)
+      post "https://test.localhost/blog/themes/import.json", params: { file: "theme.zip" }
+      expect(response.status).to eq(400)
+    end
+  end
+
   describe "Git endpoints" do
     it "imports and pulls the configured source without activating it" do
       Dir.mktmpdir do |directory|

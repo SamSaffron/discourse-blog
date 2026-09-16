@@ -17,7 +17,7 @@ export default <template>
       <:actions as |actions|>
         <actions.Default
           @route="adminPlugins.show.discourse-blog-themes.import"
-          @label="discourse_blog.admin.import_git"
+          @label="discourse_blog.admin.import"
         />
         <actions.Primary
           @route="adminPlugins.show.discourse-blog-themes.new"

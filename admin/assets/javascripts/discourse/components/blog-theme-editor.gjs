@@ -11,6 +11,7 @@ import BackButton from "discourse/components/back-button";
 import Form from "discourse/components/form";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import getURL from "discourse/lib/get-url";
 import { eq, not, or } from "discourse/truth-helpers";
 import DButton from "discourse/ui-kit/d-button";
 import DFlashMessage from "discourse/ui-kit/d-flash-message";
@@ -60,6 +61,10 @@ export default class BlogThemeEditor extends Component {
       activeTheme: active,
       draft: theme,
     });
+  }
+
+  get exportUrl() {
+    return getURL(`/blog/themes/${this.state.draft.id}/export`);
   }
 
   get hasUnsavedChanges() {
@@ -435,7 +440,20 @@ export default class BlogThemeEditor extends Component {
       <DPageSubheader
         @titleLabel={{this.state.draft.name}}
         @descriptionLabel={{i18n "discourse_blog.admin.editor_description"}}
-      />
+      >
+        <:actions as |actions|>
+          {{#if this.state.draft.id}}
+            <actions.Wrapped>
+              <a
+                class="btn btn-default raw-link blog-theme-editor__export"
+                href={{this.exportUrl}}
+                title={{i18n "discourse_blog.admin.export_description"}}
+                download
+              >{{i18n "discourse_blog.admin.export"}}</a>
+            </actions.Wrapped>
+          {{/if}}
+        </:actions>
+      </DPageSubheader>
 
       <div class="admin-controls blog-theme-editor__tabs">
         <DHorizontalOverflowNav

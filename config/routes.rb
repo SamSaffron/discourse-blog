@@ -11,6 +11,7 @@ DiscourseBlog::Engine.routes.draw do
   post "/blog/themes/import" => "themes#import"
   get "/blog/theme-authoring" => "themes#authoring"
   post "/blog/theme-authoring/preview" => "themes#working_preview"
+  get "/blog/themes/:id/export" => "themes#export"
   get "/blog/themes/:id" => "themes#show"
   put "/blog/themes/:id" => "themes#update"
   delete "/blog/themes/:id" => "themes#destroy"

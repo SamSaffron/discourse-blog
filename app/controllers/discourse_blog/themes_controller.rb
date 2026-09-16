@@ -4,6 +4,7 @@ module ::DiscourseBlog
   class ThemesController < ::Admin::AdminController
     helper DiscourseBlog::BlogHelper
     requires_plugin PLUGIN_NAME
+    skip_before_action :check_xhr, only: :export
     before_action :ensure_discussion_host
 
     rescue_from RemoteTheme::ImportError do |error|
@@ -120,7 +121,19 @@ module ::DiscourseBlog
       render json: present(theme)
     end
 
+    def export
+      theme = BlogTheme.find(params[:id])
+      send_data ThemeExporter.export(theme),
+                filename: "blog-theme-#{theme["name"].parameterize.presence || "export"}.zip",
+                type: "application/zip"
+    end
+
     def import
+      if params[:file]
+        theme = ThemeImporter.import_file(file: params[:file], user: current_user)
+        return render json: present(theme), status: :created
+      end
+
       repository = params.require(:repository)
       branch = params[:branch]
       hijack do
