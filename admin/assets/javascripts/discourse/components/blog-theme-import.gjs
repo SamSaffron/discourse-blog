@@ -76,6 +76,7 @@ export default class BlogThemeImport extends Component {
           @name="source"
           @title={{i18n "discourse_blog.admin.import_source"}}
           @type="radio-group"
+          @validation="required"
           as |field|
         >
           <field.Control as |group|>
@@ -118,8 +119,13 @@ export default class BlogThemeImport extends Component {
                 @acceptedFormatsOverride=".zip"
                 @fileInputDisabled={{field.disabled}}
                 @fileInputId={{field.id}}
+                @label="discourse_blog.admin.choose_theme_file"
                 @onFilesPicked={{fn this.selectFile field}}
+                @showButton={{true}}
               />
+              {{#if field.value}}
+                <p class="blog-theme-import__filename">{{field.value.name}}</p>
+              {{/if}}
             </field.Control>
           </form.Field>
         {{/if}}

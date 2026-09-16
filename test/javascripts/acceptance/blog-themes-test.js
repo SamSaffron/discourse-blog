@@ -523,9 +523,32 @@ acceptance("Blog themes and identity", function (needs) {
     await visit("/admin/plugins/discourse-blog/themes/import/new");
     await click('input[type="radio"][value="file"]');
     assert.dom('[name="repository"]').doesNotExist("Git fields are hidden");
+    assert
+      .dom(".blog-theme-import .pick-files-button button")
+      .isVisible("a visible button opens the file picker")
+      .hasText("Choose ZIP file", "the picker describes the supported format");
+
+    const fileInput = find('.blog-theme-import input[type="file"]');
+    const openPicker = sinon.stub(fileInput, "click");
+    try {
+      await click(".blog-theme-import .pick-files-button button");
+      assert.true(
+        openPicker.calledOnce,
+        "the button opens the system file picker"
+      );
+    } finally {
+      openPicker.restore();
+    }
+
     await triggerEvent('.blog-theme-import input[type="file"]', "change", {
       files: [file],
     });
+    assert
+      .dom(".blog-theme-import__filename")
+      .hasText(
+        "theme.zip",
+        "the selected filename is visible before importing"
+      );
     await formKit(".blog-theme-import__form").submit();
 
     assert.strictEqual(
