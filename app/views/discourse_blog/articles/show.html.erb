@@ -2,7 +2,7 @@
 <% unless @preview %>
   <% discussion_closed = @topic.closed? || @topic.archived? %>
   <section id="discussion" class="blog-discussion">
-    <div class="blog-discussion__heading"><h2><%= t('discourse_blog.discussion') %></h2><a href="<%= @topic.url %>"><%= t('discourse_blog.open_discussion') %> ↗</a></div>
+    <div class="blog-discussion__heading"><h2 id="comments"><%= t('discourse_blog.discussion') %></h2><a href="<%= @topic.url %>"><%= t('discourse_blog.open_discussion') %> ↗</a></div>
     <p><%= discussion_closed ? t('discourse_blog.discussion_closed') : t('discourse_blog.discussion_description') %></p>
     <% if !discussion_closed || @topic.posts_count > 1 %>
     <p class="blog-discussion__load-error" role="status" hidden><%= t('discourse_blog.discussion_load_error') %></p>

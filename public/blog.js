@@ -93,6 +93,110 @@ if (comments) {
 
 const article = document.querySelector?.(".blog-article__body");
 
+if (article && document.body.dataset.blogHighlightCoreUrl) {
+  const blocks = [...article.querySelectorAll("pre code")]
+    .map((code) => {
+      const language = [...code.classList]
+        .map((name) => name.match(/^lang(?:uage)?-(.+)$/i)?.[1])
+        .find(Boolean)
+        ?.toLowerCase();
+      return { code, language };
+    })
+    .filter(({ code, language }) => {
+      return (
+        !code.dataset.highlighted &&
+        !code.closest(".nohighlight, .no-highlight") &&
+        !/^(text|plaintext|plain|none|nohighlight|no-highlight)$/.test(
+          language
+        ) &&
+        (language || document.body.dataset.blogHighlightAuto === "true") &&
+        code.textContent.length <= 30000
+      );
+    });
+
+  if (blocks.length) {
+    const highlight = async () => {
+      try {
+        const [{ default: hljs }, { default: registerLanguages }] =
+          await Promise.all([
+            import(document.body.dataset.blogHighlightCoreUrl),
+            import(document.body.dataset.blogHighlightLanguagesUrl),
+          ]);
+        registerLanguages(hljs);
+
+        for (const { code, language } of blocks) {
+          const lines = [...code.querySelectorAll("ol.lines > li")];
+          if (!lines.length && code.children.length) {
+            continue;
+          }
+
+          const text = lines.length
+            ? lines.map((line) => line.textContent).join("\n")
+            : code.textContent;
+          const detected =
+            !language || language === "auto"
+              ? hljs.highlightAuto(text.trimStart().slice(0, 2000)).language
+              : language;
+          if (!detected || !hljs.getLanguage(detected)) {
+            continue;
+          }
+
+          const highlighted = document.createElement("code");
+          highlighted.className = `language-${detected}`;
+          highlighted.textContent = text;
+          hljs.highlightElement(highlighted);
+
+          if (lines.length) {
+            // Highlight the whole snippet so multiline tokens retain their context.
+            const fragments = lines.map(() =>
+              document.createDocumentFragment()
+            );
+            const walker = document.createTreeWalker(
+              highlighted,
+              NodeFilter.SHOW_TEXT
+            );
+            let lineIndex = 0;
+            while (walker.nextNode()) {
+              const node = walker.currentNode;
+              node.textContent.split("\n").forEach((part, index) => {
+                if (index) {
+                  lineIndex++;
+                }
+                let token = document.createTextNode(part);
+                for (
+                  let parent = node.parentNode;
+                  parent !== highlighted;
+                  parent = parent.parentNode
+                ) {
+                  const wrapper = parent.cloneNode(false);
+                  wrapper.append(token);
+                  token = wrapper;
+                }
+                fragments[lineIndex].append(token);
+              });
+            }
+            lines.forEach((line, index) =>
+              line.replaceChildren(fragments[index])
+            );
+          } else {
+            code.replaceChildren(...highlighted.childNodes);
+          }
+          code.classList.add("hljs");
+          code.dataset.highlighted = "yes";
+        }
+      } catch (error) {
+        console.warn("Could not load blog syntax highlighting", error);
+      }
+    };
+
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(highlight, { timeout: 2000 });
+    } else {
+      setTimeout(highlight, 0);
+    }
+  }
+}
+
 if (article) {
   const probe = document.createElement("dialog");
 

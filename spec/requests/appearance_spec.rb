@@ -43,6 +43,21 @@ RSpec.describe "Blog appearance", type: :request do
       expect(html.at_css('link[href$="/editorial.css"]')).to be_nil
     end
 
+    it "provides lazy highlighter URLs without eagerly loading the modules" do
+      get "https://blog.example.com/"
+
+      html = Nokogiri.HTML5(response.body)
+      body = html.at_css("body")
+      expect(body["data-blog-highlight-core-url"]).to eq(
+        "https://blog.example.com#{DiscourseBlog::SyntaxHighlighter.path}",
+      )
+      expect(body["data-blog-highlight-languages-url"]).to eq(
+        "#{Discourse.base_url}#{HighlightJs.path}",
+      )
+      expect(body["data-blog-highlight-auto"]).to eq(SiteSetting.autohighlight_all_code.to_s)
+      expect(html.css('script[src*="highlight"], link[rel="modulepreload"]')).to be_empty
+    end
+
     it "provides translated lightbox labels to the public script" do
       get "https://blog.example.com/"
 

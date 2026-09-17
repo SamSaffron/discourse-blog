@@ -180,6 +180,84 @@ RSpec.describe "Blog themes", type: :request do
     end
   end
 
+  describe "samsaffron.com reference theme" do
+    let(:reference_theme) do
+      root = Rails.root.join("plugins/discourse-blog/branding/samsaffron")
+      values =
+        JSON.parse(File.read(root.join("blog-theme.json"))).merge(
+          "css" => File.read(root.join("blog.css")),
+          "javascript" => "",
+        )
+      DiscourseBlog::TemplateRenderer::PAGES.each do |page|
+        values["template_#{page}"] = File.read(root.join("templates/#{page}.liquid"))
+      end
+      DiscourseBlog::BlogTheme.save(values, user: admin)
+    end
+
+    it "previews every page with profile links, clear headings, and the original discussion" do
+      SiteSetting.tagging_enabled = true
+      tag = Fabricate(:tag)
+      topic.tags << tag
+      publication =
+        DiscourseBlog::Publication.create!(
+          topic: topic,
+          discussion_topic: topic,
+          published: true,
+          published_at: 1.day.ago,
+          path: "/blog/archive/2007/02/16/7.aspx",
+        )
+      publication.paths.create!(path: publication.path)
+      active = DiscourseBlog::BlogTheme.active
+      token = DiscourseBlog::BlogTheme.preview_token(reference_theme)
+
+      {
+        "/" => 200,
+        "/archive" => 200,
+        "/tag/#{tag.slug}" => 200,
+        publication.path => 200,
+        "/about" => 200,
+        "/missing-reference-page" => 404,
+      }.each do |path, status|
+        get "https://blog.example.com#{path}", params: { blog_theme_preview: token }
+
+        expect(response.status).to eq(status)
+        document = Nokogiri.HTML5(response.body)
+        expect(document.css(".sam-blog #main").size).to eq(1)
+        expect(document.css('.sam-blog__columns[class~="--article"]').size).to eq(
+          path == publication.path ? 1 : 0,
+        )
+        expect(document.css("h1").size).to eq(1)
+        expect(document.css("[data-template-diagnostic]")).to be_empty
+        expect(document.css(".sam-blog__sidebar h2").map(&:text)).to contain_exactly(
+          I18n.t("discourse_blog.on_social"),
+          I18n.t("discourse_blog.community_activity"),
+          I18n.t("discourse_blog.online_content"),
+          I18n.t("discourse_blog.about"),
+        )
+        expect(
+          document.css(".sam-blog__profile-link").map { |link| link["href"] },
+        ).to contain_exactly(
+          "https://ruby.social/@samsaffron",
+          "https://bsky.app/profile/samsaffron1.bsky.social",
+          "https://twitter.com/samsaffron",
+          "https://meta.discourse.org/u/sam/activity",
+        )
+        if path == publication.path
+          expect(document.css("#discussion #comments").size).to eq(1)
+          expect(document.at_css(".blog-article__body").inner_html).to include(first_post.cooked)
+        elsif path == "/"
+          expect(document.at_css(".sam-blog__summary time")["datetime"]).to eq(
+            publication.published_at.iso8601,
+          )
+          expect(document.at_css(".sam-blog__summary-title a")["href"]).to start_with(
+            publication.url,
+          )
+        end
+      end
+      expect(DiscourseBlog::BlogTheme.active).to eq(active)
+    end
+  end
+
   describe "management" do
     it "requires administrators and rejects the public blog origin" do
       get "https://test.localhost/blog/themes.json"

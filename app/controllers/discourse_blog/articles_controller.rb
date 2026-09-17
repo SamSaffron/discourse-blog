@@ -5,10 +5,10 @@ module ::DiscourseBlog
     helper DiscourseBlog::BlogHelper
     requires_plugin PLUGIN_NAME
     skip_before_action :check_xhr, :preload_json
-    # This asset contains public administrator-authored code, never session data.
-    skip_before_action :verify_authenticity_token, only: :theme_js
+    # These assets contain public code, never session data.
+    skip_before_action :verify_authenticity_token, only: %i[theme_js highlight_js]
     before_action :ensure_public_blog
-    before_action :load_blog_theme
+    before_action :load_blog_theme, except: :highlight_js
     layout "discourse_blog"
     rescue_from ActiveRecord::RecordNotFound, Discourse::NotFound do
       @page_title = I18n.t("discourse_blog.not_found_title")
@@ -119,6 +119,15 @@ module ::DiscourseBlog
       colors += @blog_theme["css"] unless params[:blog_safe_mode] == "1"
       response.headers["X-Robots-Tag"] = "noindex"
       render plain: colors, content_type: "text/css"
+    end
+
+    def highlight_js
+      raise Discourse::NotFound unless params[:version] == SyntaxHighlighter.version
+
+      no_cookies
+      apply_cdn_headers
+      immutable_for 1.year
+      render plain: SyntaxHighlighter.source, content_type: "application/javascript"
     end
 
     def theme_js

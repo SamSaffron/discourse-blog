@@ -1,8 +1,12 @@
-<article class="sam-blog__post">
-  <header><h1>{{ article.title }}</h1><p><time datetime="{{ article.published_at }}">{{ article.date }}</time></p></header>
+<article>
+  <header class="sam-blog__article-header">
+    <h1 class="sam-blog__article-title">{{ article.title }}</h1>
+    <div class="sam-blog__meta"><span>{{ article.author }}</span><time datetime="{{ article.published_at }}">{{ article.date }}</time><span>{{ article.reading_time }}</span></div>
+  </header>
   <div class="blog-article__body cooked">{{ article.body_html }}</div>
-  {% if article.updated_label %}<p>{{ article.updated_label }}</p>{% endif %}
-  <footer class="sam-blog__post-footer"><p>{{ labels.posted_by }}: {{ article.author }} &nbsp; <a href="{{ article.url }}">{{ labels.permalink }}</a> | <a href="#discussion">{{ labels.comments }}{% if article.replies > 0 %} ({{ article.replies }}){% endif %}</a></p>
-    <div class="blog__tags">{% for tag in article.tags %}<a href="{{ tag.url }}">{{ tag.name }}</a>{% endfor %}</div>
+  {% if article.updated_label %}<p class="sam-blog__updated">{{ article.updated_label }}</p>{% endif %}
+  <footer class="sam-blog__post-footer">
+    {% if article.tags.size > 0 %}<div class="blog__tags">{% for tag in article.tags %}<a href="{{ tag.url }}">{{ tag.name }}</a>{% endfor %}</div>{% endif %}
+    <a href="#discussion">{{ article.replies_label }}</a>
   </footer>
 </article>

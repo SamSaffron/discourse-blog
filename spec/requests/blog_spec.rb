@@ -179,6 +179,54 @@ RSpec.describe "Blog publication", type: :request do
       publication
     end
 
+    it "preserves historical canonical paths through publishing and corrections" do
+      paths = %w[
+        /archive/2011/03/30/How+I+learned+to+write+my+own+ORM
+        /archive/2009/01/02/My+server+just+died%2C+long+live+my+new+VPS
+        /archive/2008/06/06/video_browser_past_present_and_future
+        /archive/2011/09/08/Extending+the+ASP.NET+error+page
+        /blog/archive/2007/02/16/7.aspx
+      ]
+      previous_url = publication.url
+
+      paths.each do |path|
+        publication.save_metadata!(admin, path: path)
+        publication.publish!(admin)
+
+        get "https://blog.example.com#{path}"
+        expect(response.status).to eq(200)
+        html = Nokogiri.HTML5(response.body)
+        expect(html.at_css('link[rel="canonical"]')["href"]).to eq(
+          "https://blog.example.com#{path}",
+        )
+        expect(html.at_css(".blog-article__body").text).to include(first_post.raw)
+        expect(html.at_css("#discussion #comments")).to be_present
+
+        get previous_url
+        expect(response).to redirect_to("https://blog.example.com#{path}")
+        expect(response.status).to eq(301)
+        previous_url = publication.url
+      end
+
+      publication.unpublish!(admin)
+      paths.each do |path|
+        get "https://blog.example.com#{path}"
+        expect(response.status).to eq(404)
+      end
+    end
+
+    it "permanently redirects legacy index and feed endpoints on the blog host" do
+      {
+        "/posts" => "/",
+        "/posts.rss" => "/feed.xml",
+        "/posts.atom" => "/feed.xml",
+      }.each do |path, target|
+        get "https://blog.example.com#{path}"
+        expect(response.status).to eq(301)
+        expect(response).to redirect_to("https://blog.example.com#{target}")
+      end
+    end
+
     it "preserves the configured blog host when it is not a database hostname alias" do
       RailsMultisite::ConnectionManagement.stubs(:current_db_hostnames).returns(["test.localhost"])
 

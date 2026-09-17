@@ -500,6 +500,139 @@ html {
   overflow-wrap: normal;
 }
 
+.blog-article__body pre.onebox code {
+  /* The template indents the line list; only individual code lines preserve whitespace. */
+  white-space: normal;
+}
+
+.blog-article__body pre.onebox ol.lines {
+  margin: 0;
+  padding-inline-start: 3em;
+}
+
+.blog-article__body pre.onebox ol.lines li {
+  min-height: 1.6em;
+  margin: 0;
+  white-space: pre;
+}
+
+.blog-article__body .hljs-comment,
+.blog-article__body .hljs-doctag,
+.blog-article__body .hljs-code,
+.blog-article__body .hljs-meta {
+  color: var(--blog-muted);
+  font-style: italic;
+}
+
+.blog-article__body .hljs-keyword,
+.blog-article__body .hljs-subst {
+  color: var(--hljs-keyword);
+}
+
+.blog-article__body .hljs-number {
+  color: var(--hljs-number);
+}
+
+.blog-article__body .hljs-tag,
+.blog-article__body .hljs-tag .hljs-title {
+  color: var(--hljs-tag);
+  font-weight: normal;
+}
+
+.blog-article__body .hljs-string,
+.blog-article__body .hljs-tag .hljs-string,
+.blog-article__body .hljs-template-tag,
+.blog-article__body .hljs-template-variable,
+.blog-article__body .hljs-type {
+  color: var(--hljs-string);
+}
+
+.blog-article__body .hljs-title {
+  color: var(--hljs-title);
+}
+
+.blog-article__body .hljs-quote,
+.blog-article__body .hljs-operator,
+.blog-article__body .hljs-selector-pseudo,
+.blog-article__body .hljs-selector-tag,
+.blog-article__body .hljs-link {
+  color: var(--hljs-string);
+}
+
+.blog-article__body .hljs-subst {
+  font-weight: normal;
+}
+
+.blog-article__body .hljs-literal,
+.blog-article__body .hljs-class .hljs-title {
+  color: var(--hljs-title);
+}
+
+.blog-article__body .hljs-name {
+  color: var(--hljs-name);
+}
+
+.blog-article__body .hljs-punctuation {
+  color: var(--hljs-punctuation);
+}
+
+.blog-article__body .hljs-attr {
+  color: var(--hljs-attr);
+}
+
+.blog-article__body .hljs-selector-attr,
+.blog-article__body .hljs-selector-class,
+.blog-article__body .hljs-selector-id {
+  color: var(--hljs-attr);
+}
+
+.blog-article__body .hljs-variable {
+  color: var(--hljs-variable);
+}
+
+.blog-article__body .hljs-attribute {
+  color: var(--hljs-attribute);
+}
+
+.blog-article__body .hljs-regexp {
+  color: var(--success);
+}
+
+.blog-article__body .hljs-symbol {
+  color: var(--hljs-symbol);
+}
+
+.blog-article__body .hljs-built_in {
+  color: var(--hljs-name);
+}
+
+.blog-article__body .hljs-deletion {
+  background: var(--danger-low);
+  color: var(--hljs-deletion);
+}
+
+.blog-article__body .hljs-addition {
+  background: var(--success-low);
+  color: var(--hljs-addition);
+}
+
+.blog-article__body .hljs-section {
+  color: var(--hljs-name);
+}
+
+.blog-article__body .hljs-bullet {
+  color: var(--hljs-attribute);
+}
+
+.blog-article__body .hljs-emphasis {
+  color: var(--hljs-comment);
+  font-style: italic;
+}
+
+.blog-article__body .hljs-strong {
+  font-weight: bold;
+}
+
 .blog-article__body blockquote {
   margin: 1.75em 0;
   padding: 1em 1.25em;
@@ -600,32 +733,74 @@ html {
 }
 
 .blog-article__body aside.onebox .onebox-body {
+  display: flow-root;
   min-width: 0;
   padding: 1rem;
+  overflow-wrap: anywhere;
 }
 
 .blog-article__body
   aside.onebox
   :where(.aspect-image, .aspect-image-full-size) {
-  max-width: 100%;
-  margin-block-end: 1rem;
   overflow: hidden;
   border-radius: 4px;
 }
 
+.blog-article__body aside.onebox :where(.thumbnail, .aspect-image) {
+  float: inline-start;
+  width: auto;
+  max-width: min(25%, 7.5rem);
+  margin-block: 0 0.5rem;
+  margin-inline: 0 1rem;
+}
+
 .blog-article__body aside.onebox .thumbnail {
   display: block;
+  max-height: 10rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.blog-article__body aside.onebox .onebox-avatar {
+  width: 3rem;
+  max-width: 100%;
+  height: 3rem;
+}
+
+.blog-article__body aside.onebox .aspect-image-full-size {
+  clear: both;
+  max-width: 100%;
+  margin-block: 1rem 0;
+}
+
+.blog-article__body
+  aside.onebox
+  :where(.aspect-image, .aspect-image-full-size)
+  img {
   float: none;
   width: 100%;
   max-width: 100%;
-  height: auto;
+  max-height: none;
   margin: 0;
 }
 
-.blog-article__body aside.onebox h3 {
+.blog-article__body aside.onebox :where(h3, h4) {
   margin: 0 0 0.5rem;
-  font-size: 1.15rem;
-  line-height: 1.35;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.blog-article__body aside.onebox :where(.tags, .date) {
+  color: var(--blog-muted);
+  font-size: 0.85em;
+}
+
+.blog-article__body aside.onebox .tags {
+  margin-block-end: 0.35rem;
+}
+
+.blog-article__body aside.onebox .tags strong {
+  font-weight: 500;
 }
 
 .blog-article__body aside.onebox p {

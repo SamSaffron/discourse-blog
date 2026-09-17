@@ -1,17 +1,29 @@
+{% if page.archive or page.title != site.title %}
+<h1 class="sam-blog__page-title">{{ page.heading }}</h1>
+{% endif %}
 {% if page.archive %}
-<h1>{{ page.heading }}</h1>
 <form class="blog__search" action="{{ site.archive_url }}" method="get" role="search">
   {% if page.preview_token %}<input type="hidden" name="blog_theme_preview" value="{{ page.preview_token }}">{% endif %}
   <label for="blog-search">{{ labels.search }}</label><input id="blog-search" type="search" name="q" value="{{ page.query }}" maxlength="100"><button type="submit">{{ labels.search }}</button>
 </form>
 {% endif %}
-{% for article in articles %}
-<article class="sam-blog__post">
-  <header><h2><a href="{{ article.url }}">{{ article.title }}</a></h2><p>{{ article.relative_date }}</p></header>
-  <div class="sam-blog__post-body"><p>{{ article.excerpt }}</p><p><a class="sam-blog__read-more" href="{{ article.url }}">{{ labels.continue_reading }}</a></p></div>
-  <footer class="sam-blog__post-footer"><p>{{ labels.posted_by }}: {{ article.author }} &nbsp; <a href="{{ article.url }}">{{ labels.permalink }}</a> | <a href="{{ article.url }}#discussion">{{ labels.comments }}{% if article.replies > 0 %} ({{ article.replies }}){% endif %}</a></p></footer>
-</article>
-{% else %}<h2>{{ labels.empty_title }}</h2><p>{{ labels.empty_body }}</p>{% endfor %}
+<div class="sam-blog__articles">
+  {% for article in articles %}
+  <article class="sam-blog__summary">
+    <header>
+      <div class="sam-blog__meta"><time datetime="{{ article.published_at }}">{{ article.date }}</time><span>{{ article.reading_time }}</span></div>
+      <h2 class="sam-blog__summary-title"><a href="{{ article.url }}">{{ article.title }}</a></h2>
+    </header>
+    <p class="sam-blog__summary-excerpt">{{ article.excerpt }}</p>
+    <footer class="sam-blog__summary-footer">
+      <a class="sam-blog__read-more" href="{{ article.url }}">{{ labels.continue_reading }} <span aria-hidden="true">→</span></a>
+      <a class="sam-blog__comments" href="{{ article.url }}#discussion">{{ article.replies_label }}</a>
+    </footer>
+  </article>
+  {% else %}
+  <h2 class="sam-blog__summary-title">{{ labels.empty_title }}</h2><p class="sam-blog__summary-excerpt">{{ labels.empty_body }}</p>
+  {% endfor %}
+</div>
 <nav class="blog__pagination" aria-label="{{ labels.pagination }}">
   {% if page.previous_url %}<a rel="prev" href="{{ page.previous_url }}">← {{ labels.newer }}</a>{% endif %}
   {% if page.next_url %}<a rel="next" href="{{ page.next_url }}">{{ labels.older }} →</a>{% endif %}

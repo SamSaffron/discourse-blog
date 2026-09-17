@@ -5,8 +5,28 @@ module ::DiscourseBlog
     self.table_name = "discourse_blog_publications"
     RESERVED_PATHS =
       (
-        %w[about tag feed sitemap robots blog session admin t u review] +
-          Configuration::ASSET_PREFIXES
+        %w[
+          about
+          tag
+          feed
+          feed.xml
+          sitemap
+          sitemap.xml
+          robots
+          robots.txt
+          blog
+          session
+          admin
+          t
+          u
+          review
+          posts
+          posts.rss
+          posts.atom
+          blog-theme.css
+          blog-custom.js
+          blog-highlight
+        ] + Configuration::ASSET_PREFIXES
       ).freeze
     METADATA = %w[path excerpt featured published_at].freeze
 
@@ -29,7 +49,7 @@ module ::DiscourseBlog
                 maximum: 240,
               },
               format: {
-                with: %r{\A/[a-z0-9]+(?:[/-][a-z0-9]+)*\z},
+                with: %r{\A/(?:[a-zA-Z0-9_+.,-]|%2[bBcC])+(?:/(?:[a-zA-Z0-9_+.,-]|%2[bBcC])+)*\z},
               }
     validates :excerpt, length: { maximum: 1000 }, exclusion: { in: [nil] }
     validates :featured, inclusion: { in: [true, false] }
@@ -476,7 +496,11 @@ module ::DiscourseBlog
     end
 
     def available_path
-      if path == "/archive" || RESERVED_PATHS.include?(path.to_s.split("/")[1]) ||
+      segments = path.to_s.split("/")
+      # Dated archive imports may use the otherwise reserved editorial prefix.
+      legacy_archive = path.to_s.match?(%r{\A/blog/archive/\d{4}/\d{2}/\d{2}/[^/]+\z})
+      reserved = RESERVED_PATHS.include?(segments[1].to_s.downcase) && !legacy_archive
+      if path.to_s.downcase == "/archive" || reserved || segments.intersect?(%w[. ..]) ||
            Path.where(path: path).where.not(publication_id: id).exists?
         errors.add(:path, I18n.t("discourse_blog.errors.path_taken"))
       end

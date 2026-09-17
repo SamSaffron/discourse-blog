@@ -1,1 +1,5 @@
-<article class="sam-blog__post"><h1>{{ labels.about }}</h1><div class="blog-article__body cooked">{{ site.about_html }}</div><p><a href="{{ site.community_url }}">{{ labels.join_community }} ↗</a></p></article>
+<article>
+  <h1 class="sam-blog__page-title">{{ labels.about }}</h1>
+  <div class="blog-article__body cooked">{{ site.about_html }}</div>
+  <footer class="sam-blog__post-footer"><a href="{{ site.community_url }}">{{ labels.join_community }} <span aria-hidden="true">↗</span></a></footer>
+</article>

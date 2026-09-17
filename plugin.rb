@@ -109,10 +109,15 @@ after_initialize do
       get "/review" => "discourse_blog/review_reader#show"
       post "/review/feedback" => "discourse_blog/review_reader#feedback"
       get "/" => "discourse_blog/articles#index"
+      get "/posts" => redirect { "#{DiscourseBlog::Configuration.origin}/" }, :format => false
+      %w[/posts.rss /posts.atom].each do |path|
+        get path => redirect { "#{DiscourseBlog::Configuration.origin}/feed.xml" }, :format => false
+      end
       get "/archive" => "discourse_blog/articles#index", :defaults => { archive: true }
       get "/tag/:tag" => "discourse_blog/articles#index"
       get "/about" => "discourse_blog/articles#about"
       get "/blog-theme.css" => "discourse_blog/articles#theme_css", :format => false
+      get "/blog-highlight/:version.js" => "discourse_blog/articles#highlight_js", :format => false
       get "/blog-custom.js" => "discourse_blog/articles#theme_js", :format => false
       get "/feed.xml" => "discourse_blog/articles#feed",
           :defaults => {

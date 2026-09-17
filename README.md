@@ -40,6 +40,13 @@ repeatable development setup, admin controls, and deployment boundaries.
 - Private working topics, frozen approved revisions, and preserved public discussions.
 - Durable paths, including historical date-based paths; automatic 301 aliases when
   changing an article path. Topic title edits never change the published path.
+  Imported paths retain case, plus signs, underscores, dots, commas, and encoded
+  plus/comma characters. Dated `/blog/archive/YYYY/MM/DD/...` paths are supported;
+  other editorial and asset paths remain reserved. Paths cannot contain queries,
+  fragments, traversal segments, or encoded separators.
+- Legacy `/posts` redirects permanently to `/`; `/posts.rss` and `/posts.atom`
+  redirect permanently to the RSS feed at `/feed.xml`. Article discussions retain
+  both the `#discussion` and `#comments` fragment targets.
 - Excerpts, featured articles, author bylines, reading time, publication/updated
   dates, and card/social images from the topic's first image upload.
 - Paginated homepage, searchable archive (titles/excerpts), public tag pages, and
@@ -97,6 +104,24 @@ The supplied development container already proxies both local hostnames and does
 not run hostname-enforcement middleware in development. No core middleware patch
 is needed. In production, also make sure a proxy's existing `/robots.txt` or
 `/sitemap.xml` handlers do not override the blog routes.
+
+### Backups and hostname changes
+
+Back up uploads as well as the database. Enable `include_thumbnails_in_backups`
+when preserving published revisions: their frozen HTML can reference optimized
+images that are not regenerated simply by rendering the article.
+
+A backup carries blog settings, themes, publications, and revisions, but not plugin
+source, DNS, TLS, or reverse-proxy configuration. Restore onto a compatible
+Discourse build with this plugin installed. Before exposing a restored site, set
+the correct blog origin and exact embedding host, and verify both reader and
+editorial permissions.
+
+For a hostname-changing restore, also remap absolute URLs inside
+`discourse_blog_revisions.data`. These snapshots use JSONB; core's text-column
+hostname remapping does not update them. Perform this as an explicit, backed-up
+restore operation, not by republishing or rebaking live articles. Verify canonicals,
+feeds, sitemap, article images, and embedded discussions before reopening traffic.
 
 ### Local demo provisioning
 
@@ -273,8 +298,34 @@ Ordinary cooked Markdown/HTML, images, links, tables, quotes, code blocks, nativ
 made absolute. The stylesheet intentionally does not import the entire Discourse
 theme or application bundle.
 
+Onebox layout lives in the shared `public/blog.css`, not in individual designs.
+Keep avatars small, ordinary thumbnails beside the text, and explicitly full-size
+media on their own row. When changing these rules, check bare `.thumbnail` images,
+`.onebox-avatar`, `.aspect-image` wrappers, and `.aspect-image-full-size` wrappers
+at narrow and desktop widths in both color modes. Article images outside oneboxes
+must retain their normal sizing. Code oneboxes normalize whitespace around their
+line lists, preserving it only inside each line. Check line numbering, indentation,
+empty lines, and horizontal scrolling without applying article-list spacing.
+
+Syntax highlighting is progressive enhancement in the shared reader. Only articles
+with eligible code blocks load the minified core module and the site's existing
+language bundle, asynchronously during an idle period (with a timer fallback).
+The core module is served locally from the installed frontend assets at a
+content-addressed URL; no third-party CDN or Ember application is loaded.
+`highlighted_languages` controls available grammars, and `autohighlight_all_code`
+controls unlabelled blocks. Explicit `lang-auto` blocks use bounded detection.
+Plain-text, opted-out, already highlighted, unknown-language, and oversized
+blocks remain readable without decoration. Numbered code oneboxes retain their
+line lists, blank lines, and multiline token context. Syntax colors reuse the
+site's light/dark palette. Network failures leave the original code intact.
+
+Run the standalone reader checks from the repository root with
+`node --test plugins/discourse-blog/test/browser/*.test.mjs`. The highlighting
+checks use the repository's Playwright Chromium installation and exercise actual
+minified modules, CSP, cross-origin language loading, and DOM preservation.
+
 Complex cooked-content widgets (poll interaction, client-side math, galleries,
-syntax highlighting, and arbitrary plugin decorators) are not a complete match
+and arbitrary plugin decorators) are not a complete match
 for the full topic renderer yet. The article links to Discuss for that experience.
 The full discussion does use the existing Discourse application and its features.
 

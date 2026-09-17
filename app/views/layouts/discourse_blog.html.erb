@@ -34,6 +34,9 @@
   </head>
   <body
     class="blog"
+    data-blog-highlight-core-url="<%= blog_url(DiscourseBlog::SyntaxHighlighter.path) %>"
+    data-blog-highlight-languages-url="<%= Discourse.base_url %><%= HighlightJs.path %>"
+    data-blog-highlight-auto="<%= SiteSetting.autohighlight_all_code %>"
     data-blog-lightbox-close-label="<%= t('discourse_blog.lightbox.close') %>"
     data-blog-lightbox-dialog-label="<%= t('discourse_blog.lightbox.dialog') %>"
     data-blog-lightbox-open-label="<%= t('discourse_blog.lightbox.open') %>"
