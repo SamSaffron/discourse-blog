@@ -11,7 +11,7 @@ const source = readFileSync(
 function loadDiscussion() {
   const classes = new Set();
   const failure = { hidden: true };
-  const frame = { contentWindow: {}, style: {} };
+  const frame = { contentWindow: { postMessage() {} }, style: {} };
   let message;
   let script;
   let expired;
@@ -50,7 +50,9 @@ function loadDiscussion() {
     clearTimeout: () => {
       cleared = true;
     },
+    getComputedStyle: () => ({ getPropertyValue: () => "" }),
     document: {
+      documentElement: {},
       getElementById: (id) => (id === "discourse-comments" ? comments : frame),
       createElement: () => ({}),
       head: {

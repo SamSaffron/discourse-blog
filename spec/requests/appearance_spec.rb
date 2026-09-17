@@ -39,8 +39,38 @@ RSpec.describe "Blog appearance", type: :request do
       expect(response.status).to eq(200)
       expect(html.at_css("body")["data-blog-theme"]).to be_nil
       expect(html.at_css('link[href$="/blog.css"]')).to be_present
-      expect(html.at_css('link[href$="/editorial.css"]')).to be_nil
       expect(html.at_css('link[href*="blog-theme.css"]')).to be_present
+      expect(html.at_css('link[href$="/editorial.css"]')).to be_nil
+    end
+
+    it "provides translated lightbox labels to the public script" do
+      get "https://blog.example.com/"
+
+      body = Nokogiri.HTML5(response.body).at_css("body")
+      expect(
+        body
+          .attributes
+          .slice(
+            *%w[
+              data-blog-lightbox-close-label
+              data-blog-lightbox-dialog-label
+              data-blog-lightbox-open-label
+              data-blog-lightbox-open-with-description-label
+              data-blog-lightbox-original-label
+            ],
+          )
+          .transform_values(&:value),
+      ).to eq(
+        "data-blog-lightbox-close-label" => I18n.t("discourse_blog.lightbox.close"),
+        "data-blog-lightbox-dialog-label" => I18n.t("discourse_blog.lightbox.dialog"),
+        "data-blog-lightbox-open-label" => I18n.t("discourse_blog.lightbox.open"),
+        "data-blog-lightbox-open-with-description-label" =>
+          I18n.t(
+            "discourse_blog.lightbox.open_with_description",
+            description: "__IMAGE_DESCRIPTION__",
+          ),
+        "data-blog-lightbox-original-label" => I18n.t("discourse_blog.lightbox.original"),
+      )
     end
 
     it "keeps theme code in separate assets rather than inline HTML" do

@@ -32,7 +32,15 @@
       <%= javascript_include_tag blog_theme_asset_url('/blog-custom.js'), defer: true, nonce: csp_nonce_placeholder, data: { blog_custom_script: true } %>
     <% end %>
   </head>
-  <body class="blog" data-blog-page="<%= @topic ? 'article' : (@archive ? 'archive' : action_name) %>">
+  <body
+    class="blog"
+    data-blog-lightbox-close-label="<%= t('discourse_blog.lightbox.close') %>"
+    data-blog-lightbox-dialog-label="<%= t('discourse_blog.lightbox.dialog') %>"
+    data-blog-lightbox-open-label="<%= t('discourse_blog.lightbox.open') %>"
+    data-blog-lightbox-open-with-description-label="<%= t('discourse_blog.lightbox.open_with_description', description: '__IMAGE_DESCRIPTION__') %>"
+    data-blog-lightbox-original-label="<%= t('discourse_blog.lightbox.original') %>"
+    data-blog-page="<%= @topic ? 'article' : (@archive ? 'archive' : action_name) %>"
+  >
     <a class="blog__skip" href="#main"><%= t('discourse_blog.skip_content') %></a>
     <% if blog_customizations_disabled? %>
       <aside class="blog__preview"><%= t('discourse_blog.customizations_disabled') %></aside>

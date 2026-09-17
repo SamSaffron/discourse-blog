@@ -70,6 +70,12 @@ en:
     syndication: Syndication
     time_ago: "%{time} ago"
     discussion_load_error: "The inline discussion could not load. Refresh this page to try again, or use Open in Discuss above."
+    lightbox:
+      close: Close image
+      dialog: Enlarged article image
+      open: View image
+      open_with_description: "View image: %{description}"
+      original: Open original
     skip_content: Skip to content
     navigation: Blog navigation
     archive: Archive

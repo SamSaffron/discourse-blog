@@ -90,3 +90,156 @@ if (comments) {
   );
   observer.observe(comments);
 }
+
+const article = document.querySelector?.(".blog-article__body");
+
+if (article) {
+  const probe = document.createElement("dialog");
+
+  if (typeof probe.showModal === "function") {
+    const images = article.querySelectorAll("img");
+    const openLabel = document.body.dataset.blogLightboxOpenLabel;
+    const openWithDescriptionLabel =
+      document.body.dataset.blogLightboxOpenWithDescriptionLabel;
+    const closeLabel = document.body.dataset.blogLightboxCloseLabel;
+    const dialogLabel = document.body.dataset.blogLightboxDialogLabel;
+    const originalLabel = document.body.dataset.blogLightboxOriginalLabel;
+    let dialog;
+    let dialogCaption;
+    let dialogImage;
+    let dialogOriginal;
+    let lastTrigger;
+
+    const ensureDialog = () => {
+      if (dialog) {
+        return;
+      }
+
+      dialog = probe;
+      dialog.className = "blog-lightbox";
+      dialog.setAttribute("aria-label", dialogLabel);
+
+      dialogOriginal = document.createElement("a");
+      dialogOriginal.className = "blog-lightbox__original";
+      dialogOriginal.target = "_blank";
+      dialogOriginal.rel = "noopener";
+      dialogOriginal.textContent = originalLabel;
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.autofocus = true;
+      close.className = "blog-lightbox__close";
+      close.setAttribute("aria-label", closeLabel);
+      const closeIcon = document.createElement("span");
+      closeIcon.className = "blog-lightbox__close-icon";
+      closeIcon.setAttribute("aria-hidden", "true");
+      close.append(closeIcon);
+      close.addEventListener("click", () => dialog.close());
+
+      const controls = document.createElement("div");
+      controls.className = "blog-lightbox__controls";
+      controls.append(dialogOriginal, close);
+
+      const figure = document.createElement("figure");
+      figure.className = "blog-lightbox__figure";
+      dialogImage = document.createElement("img");
+      dialogImage.className = "blog-lightbox__image";
+      dialogCaption = document.createElement("figcaption");
+      dialogCaption.className = "blog-lightbox__caption";
+      figure.append(dialogImage, dialogCaption);
+      dialog.append(controls, figure);
+      document.body.append(dialog);
+
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) {
+          dialog.close();
+        }
+      });
+      dialog.addEventListener("close", () => {
+        document.body.classList.remove("has-blog-lightbox");
+        dialogImage.removeAttribute("src");
+        dialogOriginal.removeAttribute("href");
+        lastTrigger?.focus();
+      });
+    };
+
+    const openLightbox = (trigger, image, source) => {
+      if (!source) {
+        return;
+      }
+
+      ensureDialog();
+      lastTrigger = trigger;
+      dialogImage.src = source;
+      dialogImage.alt = image.alt;
+      dialogOriginal.href = source;
+      const caption = trigger.title || image.title;
+      dialogCaption.textContent = caption;
+      dialogCaption.hidden = !caption;
+      document.body.classList.add("has-blog-lightbox");
+      dialog.showModal();
+    };
+
+    for (const image of images) {
+      if (
+        image.matches(".emoji, .avatar, .site-icon") ||
+        image.closest("aside.onebox, a.video-thumbnail")
+      ) {
+        continue;
+      }
+
+      const imageLink = image.closest("a");
+      if (imageLink && !imageLink.classList.contains("lightbox")) {
+        continue;
+      }
+
+      const trigger = imageLink || image;
+      const source = () => imageLink?.href || image.currentSrc || image.src;
+      if (!source()) {
+        continue;
+      }
+
+      trigger.classList.add("blog-lightbox-trigger");
+      trigger.setAttribute("aria-haspopup", "dialog");
+
+      if (!imageLink) {
+        trigger.tabIndex = 0;
+        trigger.setAttribute("role", "button");
+        trigger.setAttribute(
+          "aria-label",
+          image.alt
+            ? openWithDescriptionLabel.replace(
+                "__IMAGE_DESCRIPTION__",
+                image.alt
+              )
+            : openLabel
+        );
+      }
+
+      trigger.addEventListener("click", (event) => {
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.altKey ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.shiftKey
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        openLightbox(trigger, image, source());
+      });
+
+      if (!imageLink) {
+        trigger.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openLightbox(trigger, image, source());
+          }
+        });
+      }
+    }
+  }
+}
