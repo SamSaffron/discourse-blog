@@ -132,6 +132,13 @@
 }
 
 .blog-theme-editor {
+  &__template-field {
+    .ace-wrapper,
+    .ace-wrapper > .loading-container {
+      width: 100%;
+    }
+  }
+
   &__template-control {
     height: 520px;
   }

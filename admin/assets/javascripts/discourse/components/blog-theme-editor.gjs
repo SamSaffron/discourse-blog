@@ -536,6 +536,7 @@ export default class BlogThemeEditor extends Component {
               {{! Keep the field name stable during teardown when switching tabs. }}
               {{#each (array this.currentTemplate) as |template|}}
                 <form.Field
+                  class="blog-theme-editor__template-field"
                   @format="full"
                   @name={{template.name}}
                   @showTitle={{false}}
@@ -552,6 +553,7 @@ export default class BlogThemeEditor extends Component {
                       aria-describedby={{field.describedBy}}
                       @content={{field.value}}
                       @disabled={{field.disabled}}
+                      @editorId={{field.id}}
                       @mode="html"
                       @onChange={{field.set}}
                       @resizable={{true}}
